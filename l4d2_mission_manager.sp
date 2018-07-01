@@ -27,6 +27,10 @@ public void OnPluginStart(){
 	RegConsoleCmd("sm_lmm_list", Command_List, "Usage: sm_lmm_list [<coop|versus|scavenge|survival>]");
 }
 
+public void OnPluginEnd() {
+	LMM_FreeLists();
+}
+
 public Action Command_List(int iClient, int args) {
 	if (args < 1) {
 		for (int i=0; i<4; i++) {
@@ -107,6 +111,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
    CreateNative("LMM_GetNumberOfMaps", Native_GetNumberOfMaps);
    CreateNative("LMM_GetMapName", Native_GetMapName);
    g_hForward_OnLMMUpdateList = CreateGlobalForward("OnLMMUpdateList", ET_Ignore);
+   RegPluginLibrary("l4d2_mission_manager");
    return APLRes_Success;
 }
 
@@ -193,54 +198,69 @@ public int Native_GetCurrentGameMode(Handle plugin, int numParams) {
 }
 
 /* ========== Mission Parser Outputs ========== */
-ArrayList g_hStrCoop_MissionNames;	// g_hStrCoop_MissionNames.Length = Number of Coop Missions
-ArrayList g_hIntCoop_Entries;		// g_hIntCoop_Entries.Length = Number of Coop Missions + 1
-ArrayList g_hStrCoop_Maps;			// The value of nth element in g_hIntCoop_Entries is the offset of nth mission's first map 
-ArrayList g_hStrVersus_MissionNames;
-ArrayList g_hIntVersus_Entries;
-ArrayList g_hStrVersus_Maps;
-ArrayList g_hStrScavenge_MissionNames;
-ArrayList g_hIntScavenge_Entries;
-ArrayList g_hStrScavenge_Maps;
-ArrayList g_hStrSurvical_MissionNames;
-ArrayList g_hIntSurvival_Entries;
-ArrayList g_hStrSurvival_Maps;
+ArrayList g_hStr_CoopMissionNames;	// g_hStr_CoopMissionNames.Length = Number of Coop Missions
+ArrayList g_hInt_CoopEntries;		// g_hInt_CoopEntries.Length = Number of Coop Missions + 1
+ArrayList g_hStr_CoopMaps;			// The value of nth element in g_hInt_CoopEntries is the offset of nth mission's first map 
+ArrayList g_hStr_VersusMissionNames;
+ArrayList g_hInt_VersusEntries;
+ArrayList g_hStr_VersusMaps;
+ArrayList g_hStr_ScavengeMissionNames;
+ArrayList g_hInt_ScavengeEntries;
+ArrayList g_hStr_ScavengeMaps;
+ArrayList g_hStr_SurvicalMissionNames;
+ArrayList g_hInt_SurvivalEntries;
+ArrayList g_hStr_SurvivalMaps;
 
 void LMM_InitLists() {
-	g_hStrCoop_MissionNames = new ArrayList(LEN_MISSION_NAME);
-	g_hIntCoop_Entries = new ArrayList(1);
-	g_hIntCoop_Entries.Push(0);
-	g_hStrCoop_Maps = new ArrayList(LEN_MAP_FILENAME);
+	g_hStr_CoopMissionNames = new ArrayList(LEN_MISSION_NAME);
+	g_hInt_CoopEntries = new ArrayList(1);
+	g_hInt_CoopEntries.Push(0);
+	g_hStr_CoopMaps = new ArrayList(LEN_MAP_FILENAME);
 	
-	g_hStrVersus_MissionNames = new ArrayList(LEN_MISSION_NAME);
-	g_hIntVersus_Entries = new ArrayList(1);
-	g_hIntVersus_Entries.Push(0);
-	g_hStrVersus_Maps = new ArrayList(LEN_MAP_FILENAME);
+	g_hStr_VersusMissionNames = new ArrayList(LEN_MISSION_NAME);
+	g_hInt_VersusEntries = new ArrayList(1);
+	g_hInt_VersusEntries.Push(0);
+	g_hStr_VersusMaps = new ArrayList(LEN_MAP_FILENAME);
 	
-	g_hStrScavenge_MissionNames = new ArrayList(LEN_MISSION_NAME);
-	g_hIntScavenge_Entries = new ArrayList(1);
-	g_hIntScavenge_Entries.Push(0);
-	g_hStrScavenge_Maps = new ArrayList(LEN_MAP_FILENAME);
+	g_hStr_ScavengeMissionNames = new ArrayList(LEN_MISSION_NAME);
+	g_hInt_ScavengeEntries = new ArrayList(1);
+	g_hInt_ScavengeEntries.Push(0);
+	g_hStr_ScavengeMaps = new ArrayList(LEN_MAP_FILENAME);
 	
-	g_hStrSurvical_MissionNames = new ArrayList(LEN_MISSION_NAME);
-	g_hIntSurvival_Entries = new ArrayList(1);
-	g_hIntSurvival_Entries.Push(0);
-	g_hStrSurvival_Maps = new ArrayList(LEN_MAP_FILENAME);
+	g_hStr_SurvicalMissionNames = new ArrayList(LEN_MISSION_NAME);
+	g_hInt_SurvivalEntries = new ArrayList(1);
+	g_hInt_SurvivalEntries.Push(0);
+	g_hStr_SurvivalMaps = new ArrayList(LEN_MAP_FILENAME);
+}
+
+void LMM_FreeLists() {
+	delete g_hStr_CoopMissionNames;
+	delete g_hInt_CoopEntries;
+	delete g_hStr_CoopMaps;
+	delete g_hStr_VersusMissionNames;
+	delete g_hInt_VersusEntries;
+	delete g_hStr_VersusMaps;
+	delete g_hStr_ScavengeMissionNames;
+	delete g_hInt_ScavengeEntries;
+	delete g_hStr_ScavengeMaps;
+	delete g_hStr_SurvicalMissionNames;
+	delete g_hInt_SurvivalEntries;
+	delete g_hStr_SurvivalMaps;
 }
 
 ArrayList LMM_GetMissionNameList(LMM_GAMEMODE gamemode) {
 	switch (gamemode) {
 		case GAMEMODE_COOP: {
-			return g_hStrCoop_MissionNames;
+			return g_hStr_CoopMissionNames;
 		}
 		case GAMEMODE_VERSUS: {
-			return g_hStrVersus_MissionNames;
+			return g_hStr_VersusMissionNames;
 		}
 		case GAMEMODE_SCAVENGE: {
-			return g_hStrScavenge_MissionNames;
+			return g_hStr_ScavengeMissionNames;
 		}
 		case GAMEMODE_SURVIVAL: {
-			return g_hStrSurvical_MissionNames;
+			return g_hStr_SurvicalMissionNames;
 		}
 	}
 	
@@ -250,16 +270,16 @@ ArrayList LMM_GetMissionNameList(LMM_GAMEMODE gamemode) {
 ArrayList LMM_GetEntryList(LMM_GAMEMODE gamemode) {
 	switch (gamemode) {
 		case GAMEMODE_COOP: {
-			return g_hIntCoop_Entries;
+			return g_hInt_CoopEntries;
 		}
 		case GAMEMODE_VERSUS: {
-			return g_hIntVersus_Entries;
+			return g_hInt_VersusEntries;
 		}
 		case GAMEMODE_SCAVENGE: {
-			return g_hIntScavenge_Entries;
+			return g_hInt_ScavengeEntries;
 		}
 		case GAMEMODE_SURVIVAL: {
-			return g_hIntSurvival_Entries;
+			return g_hInt_SurvivalEntries;
 		}
 	}
 	
@@ -269,16 +289,16 @@ ArrayList LMM_GetEntryList(LMM_GAMEMODE gamemode) {
 ArrayList LMM_GetMapList(LMM_GAMEMODE gamemode) {
 	switch (gamemode) {
 		case GAMEMODE_COOP: {
-			return g_hStrCoop_Maps;
+			return g_hStr_CoopMaps;
 		}
 		case GAMEMODE_VERSUS: {
-			return g_hStrVersus_Maps;
+			return g_hStr_VersusMaps;
 		}
 		case GAMEMODE_SCAVENGE: {
-			return g_hStrScavenge_Maps;
+			return g_hStr_ScavengeMaps;
 		}
 		case GAMEMODE_SURVIVAL: {
-			return g_hStrSurvival_Maps;
+			return g_hStr_SurvivalMaps;
 		}
 	}
 	
@@ -292,16 +312,16 @@ public int Native_GetNumberOfMissions(Handle plugin, int numParams) {
 	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
 	switch (gamemode) {
 		case GAMEMODE_COOP: {
-			return g_hStrCoop_MissionNames.Length;
+			return g_hStr_CoopMissionNames.Length;
 		}
 		case GAMEMODE_VERSUS: {
-			return g_hStrVersus_MissionNames.Length;
+			return g_hStr_VersusMissionNames.Length;
 		}
 		case GAMEMODE_SCAVENGE: {
-			return g_hStrScavenge_MissionNames.Length;
+			return g_hStr_ScavengeMissionNames.Length;
 		}
 		case GAMEMODE_SURVIVAL: {
-			return g_hStrSurvical_MissionNames.Length;
+			return g_hStr_SurvicalMissionNames.Length;
 		}
 	}
 	

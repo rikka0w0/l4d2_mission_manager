@@ -22,4 +22,9 @@ native int LMM_GetMissionName(LMM_GAMEMODE gamemode, int missionIndex, char[] mi
 native int LMM_GetNumberOfMaps(LMM_GAMEMODE gamemode, int missionIndex);
 native int LMM_GetMapName(LMM_GAMEMODE gamemode, int missionIndex, int mapIndex, char[] mapName, int length);
 
+/**
+	This forward is called during the OnPluginStart phase.
+	Do NOT use any LMM APIs in OnPluginStart, due to the chance that your plugin is loaded prior to LMM.
+	LMM APIs become available in OnAllPluginsLoaded();
+*/
 forward void OnLMMUpdateList();
