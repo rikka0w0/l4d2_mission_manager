@@ -50,7 +50,7 @@ public Action Command_List(int iClient, int args) {
 				ReplyToCommand(iClient, ", %s\n", missionName);
 			}
 		} else {
-			LMM_GAMEMODE gamemode = StringToGamemode(gamemodeName);
+			LMM_GAMEMODE gamemode = LMM_StringToGamemode(gamemodeName);
 			DumpMissionInfo(iClient, gamemode);
 		}
 	}
@@ -59,7 +59,7 @@ public Action Command_List(int iClient, int args) {
 
 void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 	char gamemodeName[LEN_GAMEMODE_NAME];
-	GamemodeToString(gamemode, gamemodeName, sizeof(gamemodeName));
+	LMM_GamemodeToString(gamemode, gamemodeName, sizeof(gamemodeName));
 
 	int missionCount = LMM_GetNumberOfMissions(gamemode);
 	char missionName[LEN_MISSION_NAME];
@@ -80,43 +80,12 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 	ReplyToCommand(client, "-------------------\n");
 }
 
-LMM_GAMEMODE StringToGamemode(const char[] name) {
-	if(StrEqual("coop", name, false)) {
-		return LMM_GAMEMODE_COOP;
-	} else if (StrEqual("versus", name, false)) {
-		return LMM_GAMEMODE_VERSUS;
-	} else if(StrEqual("scavenge", name, false)) {
-		return LMM_GAMEMODE_SCAVENGE;
-	} else if (StrEqual("survival", name, false)) {
-		return LMM_GAMEMODE_SURVIVAL;
-	}
-	
-	return LMM_GAMEMODE_UNKNOWN;
-}
-
-int GamemodeToString(LMM_GAMEMODE gamemode, char[] name, int length) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return strcopy(name, length, "coop");
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return strcopy(name, length, "versus");
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return strcopy(name, length, "scavenge");
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return strcopy(name, length, "survival");
-		}
-	}
-	
-	return strcopy(name, length, "unknown");
-}
-
 /* ========== Register Native APIs ========== */
 Handle g_hForward_OnLMMUpdateList;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
    CreateNative("LMM_GetCurrentGameMode", Native_GetCurrentGameMode);
+   CreateNative("LMM_StringToGamemode", Native_StringToGamemode);
+   CreateNative("LMM_GamemodeToString", Native_GamemodeToString);
    CreateNative("LMM_GetNumberOfMissions", Native_GetNumberOfMissions);
    CreateNative("LMM_FindMissionIndexByName", Native_FindMissionIndexByName);
    CreateNative("LMM_GetMissionName", Native_GetMissionName);
@@ -209,6 +178,62 @@ public int Native_GetCurrentGameMode(Handle plugin, int numParams) {
 		gamemode = LMM_GAMEMODE_UNKNOWN;
 		
 	return view_as<int>gamemode;
+}
+
+public int Native_StringToGamemode(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	int length;
+	GetNativeStringLength(1, length);
+	char[] gamemodeName = new char[length+1];
+	GetNativeString(1, gamemodeName, length+1);
+	
+	if(StrEqual("coop", gamemodeName, false)) {
+		return view_as<int>LMM_GAMEMODE_COOP;
+	} else if (StrEqual("versus", gamemodeName, false)) {
+		return view_as<int>LMM_GAMEMODE_VERSUS;
+	} else if(StrEqual("scavenge", gamemodeName, false)) {
+		return view_as<int>LMM_GAMEMODE_SCAVENGE;
+	} else if (StrEqual("survival", gamemodeName, false)) {
+		return view_as<int>LMM_GAMEMODE_SURVIVAL;
+	}
+	
+	return view_as<int>LMM_GAMEMODE_UNKNOWN;
+}
+
+public int Native_GamemodeToString(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	int length = GetNativeCell(3);
+	char gamemodeName[LEN_GAMEMODE_NAME];
+
+	switch (gamemode) {
+		case LMM_GAMEMODE_COOP: {
+			strcopy(gamemodeName, sizeof(gamemodeName), "coop");
+		}
+		case LMM_GAMEMODE_VERSUS: {
+			strcopy(gamemodeName, sizeof(gamemodeName), "versus");
+		}
+		case LMM_GAMEMODE_SCAVENGE: {
+			strcopy(gamemodeName, sizeof(gamemodeName), "scavenge");
+		}
+		case LMM_GAMEMODE_SURVIVAL: {
+			strcopy(gamemodeName, sizeof(gamemodeName), "survival");
+		}
+		default: {
+			strcopy(gamemodeName, sizeof(gamemodeName), "unknown");
+		}
+	}
+	
+	if (SetNativeString(2, gamemodeName, length, false) != SP_ERROR_NONE)
+		return -1;
+		
+	return 0;
 }
 
 /* ========== Mission Parser Outputs ========== */
@@ -500,7 +525,7 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 			}
 		}
 		case MPS_MODES: {
-			g_MissionParser_CurGameMode = StringToGamemode(name);
+			g_MissionParser_CurGameMode = LMM_StringToGamemode(name);
 			if (g_MissionParser_CurGameMode == LMM_GAMEMODE_UNKNOWN) {
 				g_MissionParser_UnknownPreState = g_MissionParser_State;
 				g_MissionParser_UnknownCurLayer = 1;
@@ -585,7 +610,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 				int index = g_hIntMap_Index.FindValue(iMap);
 				if (index < 0) {
 					char gamemodeName[LEN_GAMEMODE_NAME];
-					GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
+					LMM_GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
 					if (g_hStr_InvalidMissionNames.FindString(g_MissionParser_MissionName) < 0) {
 						g_hStr_InvalidMissionNames.PushString(g_MissionParser_MissionName);
 					}
@@ -596,7 +621,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 				g_hStrMap_FileName.GetString(index, mapFile, sizeof(mapFile));
 				if (!IsMapValid(mapFile)) {
 					char gamemodeName[LEN_GAMEMODE_NAME];
-					GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
+					LMM_GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
 					if (g_hStr_InvalidMissionNames.FindString(g_MissionParser_MissionName) < 0) {
 						g_hStr_InvalidMissionNames.PushString(g_MissionParser_MissionName);
 					}
@@ -608,7 +633,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 			
 			if (numOfValidMaps < 1) {
 				char gamemodeName[LEN_GAMEMODE_NAME];
-				GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
+				LMM_GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
 				LogError("Mission %s does not contain any valid map in gamemode: \"%s\"", g_MissionParser_MissionName, gamemodeName);
 				return SMCParse_Continue;
 			}
@@ -732,6 +757,7 @@ void ParseMissions() {
 				g_MissionParser_State = MPS_ROOT;
 				SMCError err = parser.ParseFile(missionCache);
 				if (err != SMCError_Okay) {
+					g_hStr_InvalidMissionNames.PushString(missionCache);
 					LogError("An error occured while parsing %s, code:%d\n", missionCache, err);
 				}
 			}

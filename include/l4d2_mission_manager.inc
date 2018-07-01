@@ -17,6 +17,8 @@ enum LMM_GAMEMODE
 };
 
 native LMM_GAMEMODE LMM_GetCurrentGameMode();
+native LMM_GAMEMODE LMM_StringToGamemode(const char[] name);
+native int LMM_GamemodeToString(LMM_GAMEMODE gamemode, char[] name, int length);
 native int LMM_GetNumberOfMissions(LMM_GAMEMODE gamemode);
 native int LMM_FindMissionIndexByName(LMM_GAMEMODE gamemode, const char[] missionName);
 native int LMM_GetMissionName(LMM_GAMEMODE gamemode, int missionIndex, char[] missionName, int length);
