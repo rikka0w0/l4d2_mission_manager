@@ -28,8 +28,8 @@ native int LMM_GetNumberOfInvalidMissions();
 native int LMM_GetInvalidMissionName(int missionIndex, char[] mapName, int length);
 
 /**
-	This forward is called during the OnPluginStart phase.
+	This forward is called during the OnPluginStart() phase.
 	Do NOT use any LMM APIs in OnPluginStart, due to the chance that your plugin is loaded prior to LMM.
-	LMM APIs become available in OnAllPluginsLoaded();
+	LMM APIs become available in OnAllPluginsLoaded().
 */
 forward void OnLMMUpdateList();

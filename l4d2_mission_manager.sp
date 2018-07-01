@@ -43,11 +43,11 @@ public Action Command_List(int iClient, int args) {
 		
 		if (StrEqual("invalid", gamemodeName, false)) {
 			int missionCount = LMM_GetNumberOfInvalidMissions();
-			ReplyToCommand(iClient, "Invalid missions (count:%d):\n", missionCount);
+			ReplyToCommand(iClient, "Invalid missions (count:%d):", missionCount);
 			for (int iMission=0; iMission<missionCount; iMission++) {
 				char missionName[LEN_MISSION_NAME];
 				LMM_GetInvalidMissionName(iMission, missionName, sizeof(missionName));
-				ReplyToCommand(iClient, ", %s\n", missionName);
+				ReplyToCommand(iClient, ", %s", missionName);
 			}
 		} else {
 			LMM_GAMEMODE gamemode = LMM_StringToGamemode(gamemodeName);
@@ -65,19 +65,19 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 	char missionName[LEN_MISSION_NAME];
 	char mapName[LEN_MAP_FILENAME];
 	
-	ReplyToCommand(client, "Gamemode = %s (%d missions)\n", gamemodeName, missionCount);
+	ReplyToCommand(client, "Gamemode = %s (%d missions)", gamemodeName, missionCount);
 
 	for (int iMission=0; iMission<missionCount; iMission++) {
 		LMM_GetMissionName(gamemode, iMission, missionName, sizeof(missionName));
 		int mapCount = LMM_GetNumberOfMaps(gamemode, iMission);
-		ReplyToCommand(client, "%d. %s (%d maps)\n", iMission+1, missionName, mapCount);
+		ReplyToCommand(client, "%d. %s (%d maps)", iMission+1, missionName, mapCount);
 				
 		for (int iMap=0; iMap<mapCount; iMap++) {
 			LMM_GetMapName(gamemode, iMission, iMap, mapName, sizeof(mapName));
-			ReplyToCommand(client, ", %s", mapName);
+			ReplyToCommand(client, "> %s", mapName);
 		}
 	}
-	ReplyToCommand(client, "-------------------\n");
+	ReplyToCommand(client, "-------------------");
 }
 
 /* ========== Register Native APIs ========== */
@@ -510,18 +510,18 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 				g_MissionParser_UnknownPreState = g_MissionParser_State;
 				g_MissionParser_UnknownCurLayer = 1;
 				g_MissionParser_State = MPS_UNKNOWN;
-				// PrintToServer("MissionParser_NewSection found an unknown structure: %s\n",name);
+				// PrintToServer("MissionParser_NewSection found an unknown structure: %s",name);
 			}
 		}
 		case MPS_MISSION: {
 			if(StrEqual("modes", name, false)) {
 				g_MissionParser_State = MPS_MODES;
-				// PrintToServer("Entering modes section\n");
+				// PrintToServer("Entering modes section");
 			} else {
 				g_MissionParser_UnknownPreState = g_MissionParser_State;
 				g_MissionParser_UnknownCurLayer = 1;
 				g_MissionParser_State = MPS_UNKNOWN;
-				// PrintToServer("MissionParser_NewSection found an unknown structure: %s\n",name);
+				// PrintToServer("MissionParser_NewSection found an unknown structure: %s",name);
 			}
 		}
 		case MPS_MODES: {
@@ -530,14 +530,14 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 				g_MissionParser_UnknownPreState = g_MissionParser_State;
 				g_MissionParser_UnknownCurLayer = 1;
 				g_MissionParser_State = MPS_UNKNOWN;
-				// PrintToServer("MissionParser_NewSection found an unknown structure: %s\n",name);
+				// PrintToServer("MissionParser_NewSection found an unknown structure: %s",name);
 			} else {
 				g_hIntMap_Index.Clear();
 				g_hStrMap_FileName.Clear();
 				g_MissionParser_State = MPS_GAMEMODE;
 			}
 			
-			// PrintToServer("Enter gamemode: %d (%s)\n", g_MissionParser_CurGameMode, name);
+			// PrintToServer("Enter gamemode: %d (%s)", g_MissionParser_CurGameMode, name);
 		}
 		case MPS_GAMEMODE: {
 			int mapID = StringToInt(name);
@@ -549,7 +549,7 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 				g_MissionParser_UnknownPreState = g_MissionParser_State;
 				g_MissionParser_UnknownCurLayer = 1;
 				g_MissionParser_State = MPS_UNKNOWN;
-				//PrintToServer("MissionParser_NewSection found an unknown structure: %s\n",name);
+				//PrintToServer("MissionParser_NewSection found an unknown structure: %s",name);
 			}
 		}
 		case MPS_MAP: {
@@ -557,7 +557,7 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 			g_MissionParser_UnknownPreState = g_MissionParser_State;
 			g_MissionParser_UnknownCurLayer = 1;
 			g_MissionParser_State = MPS_UNKNOWN;
-			//PrintToServer("MissionParser_NewSection found an unknown structure: %s\n",name);
+			//PrintToServer("MissionParser_NewSection found an unknown structure: %s",name);
 		}
 		
 		case MPS_UNKNOWN: { // Traverse through unknown structures
@@ -579,7 +579,7 @@ public SMCResult MissionParser_KeyValue(SMCParser smc, const char[] key, const c
 			if (StrEqual("Map", key, false)) {
 				g_hIntMap_Index.Push(g_MissionParser_CurMapID);
 				g_hStrMap_FileName.PushString(value);
-				// PrintToServer("Map %d: %s\n", g_MissionParser_CurMapID, value);
+				// PrintToServer("Map %d: %s", g_MissionParser_CurMapID, value);
 			}
 		}
 	}
@@ -594,7 +594,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 		}
 		
 		case MPS_MODES: {
-			// PrintToServer("Leaving modes section\n");
+			// PrintToServer("Leaving modes section");
 			g_MissionParser_State = MPS_MISSION;
 		}
 		
@@ -717,7 +717,7 @@ void CacheMissions() {
 
 				Format(missionSrc, PLATFORM_MAX_PATH, "missions/%s", missionFileName);
 				Format(missionCache, PLATFORM_MAX_PATH, "missions.cache/%s", missionFileName);
-				// PrintToServer("Cached mission file %s\n", missionFileName);
+				// PrintToServer("Cached mission file %s", missionFileName);
 				
 				if (!FileExists(missionCache, true, NULL_STRING)) {
 					CopyFile(missionSrc, missionCache);
@@ -735,7 +735,7 @@ void ParseMissions() {
 	dirList = OpenDirectory("missions.cache", true, NULL_STRING);
 	
 	if (dirList == null) {
-		LogError("The \"missions.cache\" folder was not found!\n");
+		LogError("The \"missions.cache\" folder was not found!");
 	} else {
 		// Create the parser
 		SMCParser parser = SMC_CreateParser();
@@ -758,7 +758,7 @@ void ParseMissions() {
 				SMCError err = parser.ParseFile(missionCache);
 				if (err != SMCError_Okay) {
 					g_hStr_InvalidMissionNames.PushString(missionCache);
-					LogError("An error occured while parsing %s, code:%d\n", missionCache, err);
+					LogError("An error occured while parsing %s, code:%d", missionCache, err);
 				}
 			}
 		}
