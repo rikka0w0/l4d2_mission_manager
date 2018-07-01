@@ -118,6 +118,7 @@ Handle g_hForward_OnLMMUpdateList;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
    CreateNative("LMM_GetCurrentGameMode", Native_GetCurrentGameMode);
    CreateNative("LMM_GetNumberOfMissions", Native_GetNumberOfMissions);
+   CreateNative("LMM_FindMissionIndexByName", Native_FindMissionIndexByName);
    CreateNative("LMM_GetMissionName", Native_GetMissionName);
    CreateNative("LMM_GetNumberOfMaps", Native_GetNumberOfMaps);
    CreateNative("LMM_GetMapName", Native_GetMapName);
@@ -346,6 +347,24 @@ public int Native_GetNumberOfMissions(Handle plugin, int numParams) {
 	return -1;	
 }
 
+public int Native_FindMissionIndexByName(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	int length;
+	GetNativeStringLength(2, length);
+	char[] missionName = new char[length+1];
+	GetNativeString(2, missionName, length+1);
+	
+	ArrayList missionNameList = LMM_GetMissionNameList(gamemode);
+	if (missionNameList == null)
+		return -1;
+	
+	return missionNameList.FindString(missionName);
+}
+
 public int Native_GetMissionName(Handle plugin, int numParams) {
 	if (numParams < 4)
 		return -1;
@@ -558,6 +577,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 			// PrintToServer("Leaving gamemode: %d", g_MissionParser_CurGameMode);
 			g_MissionParser_State = MPS_MODES;
 			
+			int numOfValidMaps = 0;
 			char mapFile[LEN_MAP_FILENAME];
 			// Make sure that all map indexes are consecutive and start from 1
 			// And validate maps
@@ -583,6 +603,14 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 					LogError("Mission %s contains invalid map: \"%s\", gamemode: \"%s\"", g_MissionParser_MissionName, mapFile, gamemodeName);
 					return SMCParse_HaltFail;
 				}
+				numOfValidMaps++;
+			}
+			
+			if (numOfValidMaps < 1) {
+				char gamemodeName[LEN_GAMEMODE_NAME];
+				GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
+				LogError("Mission %s does not contain any valid map in gamemode: \"%s\"", g_MissionParser_MissionName, gamemodeName);
+				return SMCParse_Continue;
 			}
 			
 			// Add them to corresponding map lists
