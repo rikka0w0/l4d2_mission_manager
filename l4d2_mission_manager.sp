@@ -9,7 +9,7 @@ public Plugin myinfo = {
 	author = "Rikka0w0",
 	description = "Mission manager for L4D2, provide information about map orders for other plugins",
 	version = "v0.9.0",
-	url = "http://forums.alliedmods.net/showthread.php?t=308708"
+	url = "http://forums.alliedmods.net/showthread.php?t=308725"
 }
 
 public void OnPluginStart(){
@@ -23,25 +23,7 @@ public void OnPluginStart(){
 	LMM_InitLists();
 	ParseMissions();
 	FireEvent_OnLMMUpdateList();
-	
-	for (int i=0; i<4; i++) {
-		LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(1<<i);
-		int missionCount = LMM_GetNumberOfMissions(gamemode);
-		char missionName[64];
-		char mapName[64];
-		PrintToServer("=================================\nLMM_GAMEMODE=%d, count=%d\n", gamemode, missionCount);
-		for (int iMission=0; iMission<missionCount; iMission++) {
-			LMM_GetMissionName(gamemode, iMission, missionName, sizeof(missionName));
-			int mapCount = LMM_GetNumberOfMaps(gamemode, iMission);
-			PrintToServer("%d. %s [%d map(s)]\n", iMission+1, missionName, mapCount);
-			for (int iMap=0; iMap<mapCount; iMap++) {
-				LMM_GetMapName(gamemode, iMission, iMap, mapName, sizeof(mapName));
-				PrintToServer("%s, ", mapName);
-			}
-			PrintToServer("!\n");
-		}
-	}
-	
+		
 	RegConsoleCmd("sm_lmm_list", Command_List, "Usage: sm_lmm_list [<coop|versus|scavenge|survival>]");
 }
 
