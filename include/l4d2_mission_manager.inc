@@ -12,18 +12,16 @@
 
 enum LMM_GAMEMODE
 {
-	LMM_GAMEMODE_UNKNOWN = 0,
-	LMM_GAMEMODE_COOP = 1,
-	LMM_GAMEMODE_VERSUS = 2,
-	LMM_GAMEMODE_SCAVENGE = 4,
-	LMM_GAMEMODE_SURVIVAL = 8
+	LMM_GAMEMODE_UNKNOWN = -1,
+	LMM_GAMEMODE_COOP = 0,
+	LMM_GAMEMODE_VERSUS = 1,
+	LMM_GAMEMODE_SCAVENGE = 2,
+	LMM_GAMEMODE_SURVIVAL = 3
 };
 
 native LMM_GAMEMODE LMM_GetCurrentGameMode();
 native LMM_GAMEMODE LMM_StringToGamemode(const char[] name);
 native int LMM_GamemodeToString(LMM_GAMEMODE gamemode, char[] name, int length);
-native int LMM_GamemodeToGID(LMM_GAMEMODE gamemode);
-native LMM_GAMEMODE LMM_GIDToGamemode(int gid);
 
 native int LMM_GetNumberOfMissions(LMM_GAMEMODE gamemode);
 native int LMM_FindMissionIndexByName(LMM_GAMEMODE gamemode, const char[] missionName);
