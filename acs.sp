@@ -69,11 +69,11 @@
 #define WAIT_TIME_BEFORE_SWITCH_SCAVENGE		11.0
 
 //Define Game Modes
-#define GAMEMODE_UNKNOWN	-1
-#define GAMEMODE_COOP 		0
-#define GAMEMODE_VERSUS 	1
-#define GAMEMODE_SCAVENGE 	2
-#define GAMEMODE_SURVIVAL 	3
+#define GAMEMODE_UNKNOWN	LMM_GAMEMODE_UNKNOWN
+#define GAMEMODE_COOP 		LMM_GAMEMODE_COOP
+#define GAMEMODE_VERSUS 	LMM_GAMEMODE_VERSUS
+#define GAMEMODE_SCAVENGE 	LMM_GAMEMODE_SCAVENGE
+#define GAMEMODE_SURVIVAL 	LMM_GAMEMODE_SURVIVAL
 
 #define DISPLAY_MODE_DISABLED	0
 #define DISPLAY_MODE_HINT		1
@@ -85,8 +85,7 @@
 
 
 //Global Variables
-
-new g_iGameMode;					//Integer to store the gamemode
+LMM_GAMEMODE g_iGameMode;			//Integer to store the gamemode
 new g_iRoundEndCounter;				//Round end event counter for versus
 new g_iCoopFinaleFailureCount;		//Number of times the Survivors have lost the current finale
 new bool:g_bFinaleWon;				//Indicates whether a finale has be beaten or not
@@ -1146,9 +1145,7 @@ public Plugin myinfo = {
 /*======================================================================================
 #################             O N   P L U G I N   S T A R T            #################
 ======================================================================================*/
-public void OnLMMUpdateList() {
 
-}
 public OnPluginStart() {
 	LoadTranslations("acs.phrases");
 	LoadTranslations("common.phrases");
@@ -1231,12 +1228,11 @@ public CVarChange_ChMapBroadcast(Handle:hCVar, const String:strOldValue[], const
 //Callback function for the cvar for voting system
 public void CVarChange_Voting(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//If the value was changed, then set it and display a message to the server and players
-	if (StringToInt(strNewValue) == 1)
-	{
+	if (StringToInt(strNewValue) == 1) {
 		PrintToServer("[ACS] ConVar changed: Voting System ENABLED");
 		PrintToChatAll("[ACS] ConVar changed: Voting System ENABLED");
 	} else {
@@ -1248,7 +1244,7 @@ public void CVarChange_Voting(Handle hCVar, const char[] strOldValue, const char
 //Callback function for enabling or disabling the new vote winner sound
 public void CVarChange_NewVoteWinnerSound(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//If the value was changed, then set it and display a message to the server and players
@@ -1264,28 +1260,24 @@ public void CVarChange_NewVoteWinnerSound(Handle hCVar, const char[] strOldValue
 //Callback function for how the voting system is advertised to the players at the beginning of the round
 public void CVarChange_VotingAdMode(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//If the value was changed, then set it and display a message to the server and players
 	switch(StringToInt(strNewValue)) {
-		case 0:
-		{
+		case 0:	{
 			PrintToServer("[ACS] ConVar changed: Voting display mode: DISABLED");
 			PrintToChatAll("[ACS] ConVar changed: Voting display mode: DISABLED");
 		}
-		case 1:
-		{
+		case 1:	{
 			PrintToServer("[ACS] ConVar changed: Voting display mode: HINT TEXT");
 			PrintToChatAll("[ACS] ConVar changed: Voting display mode: HINT TEXT");
 		}
-		case 2:
-		{
+		case 2:	{
 			PrintToServer("[ACS] ConVar changed: Voting display mode: CHAT TEXT");
 			PrintToChatAll("[ACS] ConVar changed: Voting display mode: CHAT TEXT");
 		}
-		case 3:
-		{
+		case 3:	{
 			PrintToServer("[ACS] ConVar changed: Voting display mode: OPEN VOTE MENU");
 			PrintToChatAll("[ACS] ConVar changed: Voting display mode: OPEN VOTE MENU");
 		}
@@ -1293,13 +1285,13 @@ public void CVarChange_VotingAdMode(Handle hCVar, const char[] strOldValue, cons
 }
 
 //Callback function for the cvar for voting display delay time
-public void CVarChange_VotingAdDelayTime(Handle:hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_VotingAdDelayTime(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//Get the new value
-	new Float:fDelayTime = StringToFloat(strNewValue);
+	float fDelayTime = StringToFloat(strNewValue);
 	
 	//If the value was changed, then set it and display a message to the server and players
 	if (fDelayTime > 0.1)
@@ -1315,27 +1307,22 @@ public void CVarChange_VotingAdDelayTime(Handle:hCVar, const char[] strOldValue,
 }
 
 //Callback function for how ACS and the next map is advertised to the players during a finale
-public CVarChange_NewMapAdMode(Handle:hCVar, const String:strOldValue[], const String:strNewValue[])
-{
+public CVarChange_NewMapAdMode(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//If the value was changed, then set it and display a message to the server and players
-	switch(StringToInt(strNewValue))
-	{
-		case 0:
-		{
+	switch(StringToInt(strNewValue)) {
+		case 0:	{
 			PrintToServer("[ACS] ConVar changed: Next map advertisement display mode: DISABLED");
 			PrintToChatAll("[ACS] ConVar changed: Next map advertisement display mode: DISABLED");
 		}
-		case 1:
-		{
+		case 1:	{
 			PrintToServer("[ACS] ConVar changed: Next map advertisement display mode: HINT TEXT");
 			PrintToChatAll("[ACS] ConVar changed: Next map advertisement display mode: HINT TEXT");
 		}
-		case 2:
-		{
+		case 2:	{
 			PrintToServer("[ACS] ConVar changed: Next map advertisement display mode: CHAT TEXT");
 			PrintToChatAll("[ACS] ConVar changed: Next map advertisement display mode: CHAT TEXT");
 		}
@@ -1343,46 +1330,38 @@ public CVarChange_NewMapAdMode(Handle:hCVar, const String:strOldValue[], const S
 }
 
 //Callback function for the interval that controls the timer that advertises ACS and the next map
-public CVarChange_NewMapAdInterval(Handle:hCVar, const String:strOldValue[], const String:strNewValue[])
-{
+public CVarChange_NewMapAdInterval(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//Get the new value
-	new Float:fDelayTime = StringToFloat(strNewValue);
+	float fDelayTime = StringToFloat(strNewValue);
 	
 	//If the value was changed, then set it and display a message to the server and players
-	if (fDelayTime > 60.0)
-	{
+	if (fDelayTime > 60.0) {
 		PrintToServer("[ACS] ConVar changed: Next map advertisement interval changed to %f", fDelayTime);
 		PrintToChatAll("[ACS] ConVar changed: Next map advertisement interval changed to %f", fDelayTime);
-	}
-	else
-	{
+	} else {
 		PrintToServer("[ACS] ConVar changed: Next map advertisement interval changed to 60.0");
 		PrintToChatAll("[ACS] ConVar changed: Next map advertisement interval changed to 60.0");
 	}
 }
 
 //Callback function for the amount of times the survivors can fail a coop finale map before ACS switches
-public CVarChange_MaxFinaleFailures(Handle:hCVar, const String:strOldValue[], const String:strNewValue[])
-{
+public CVarChange_MaxFinaleFailures(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
-	if(StrEqual(strOldValue, strNewValue, false) == true)
+	if(StrEqual(strOldValue, strNewValue, false))
 		return;
 	
 	//Get the new value
-	new iMaxFailures = StringToInt(strNewValue);
+	int iMaxFailures = StringToInt(strNewValue);
 	
 	//If the value was changed, then set it and display a message to the server and players
-	if (iMaxFailures > 0)
-	{
+	if (iMaxFailures > 0) {
 		PrintToServer("[ACS] ConVar changed: Max Coop finale failures changed to %f", iMaxFailures);
 		PrintToChatAll("[ACS] ConVar changed: Max Coop finale failures changed to %f", iMaxFailures);
-	}
-	else
-	{
+	} else {
 		PrintToServer("[ACS] ConVar changed: Max Coop finale failures changed to 0");
 		PrintToChatAll("[ACS] ConVar changed: Max Coop finale failures changed to 0");
 	}
@@ -1402,7 +1381,7 @@ public OnMapStart()
 	CleanUpMenuHandles();
 	
 	//Set the game mode
-	FindGameMode();
+	g_iGameMode = LMM_GetCurrentGameMode();
 	
 	//Precache sounds
 	PrecacheSound(SOUND_NEW_VOTE_START);
@@ -1492,84 +1471,6 @@ public Action:Event_PlayerDisconnect(Handle:hEvent, const String:strName[], bool
 	return Plugin_Continue;
 }
 
-/*======================================================================================
-#################              F I N D   G A M E   M O D E             #################
-======================================================================================*/
-
-//Find the current gamemode and store it into this plugin
-FindGameMode() {
-	//Get the gamemode string from the game
-	char strGameMode[20];
-	FindConVar("mp_gamemode").GetString(strGameMode, sizeof(strGameMode));
-	
-	//Set the global gamemode int for this plugin
-	if(StrEqual(strGameMode, "coop", false))
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "realism", false))
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode,"versus", false))
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "teamversus", false))
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "scavenge", false))
-		g_iGameMode = GAMEMODE_SCAVENGE;
-	else if(StrEqual(strGameMode, "teamscavenge", false))
-		g_iGameMode = GAMEMODE_SCAVENGE;
-	else if(StrEqual(strGameMode, "survival", false))
-		g_iGameMode = GAMEMODE_SURVIVAL;
-	else if(StrEqual(strGameMode, "mutation1", false))		//Last Man On Earth
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation2", false))		//Headshot!
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation3", false))		//Bleed Out
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation4", false))		//Hard Eight
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation5", false))		//Four Swordsmen
-		g_iGameMode = GAMEMODE_COOP;
-	//else if(StrEqual(strGameMode, "mutation6", false))	//Nothing here
-	//	g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation7", false))		//Chainsaw Massacre
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation8", false))		//Ironman
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation9", false))		//Last Gnome On Earth
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation10", false))	//Room For One
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation11", false))	//Healthpackalypse!
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "mutation12", false))	//Realism Versus
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "mutation13", false))	//Follow the Liter
-		g_iGameMode = GAMEMODE_SCAVENGE;
-	else if(StrEqual(strGameMode, "mutation14", false))	//Gib Fest
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation15", false))	//Versus Survival
-		g_iGameMode = GAMEMODE_SURVIVAL;
-	else if(StrEqual(strGameMode, "mutation16", false))	//Hunting Party
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation17", false))	//Lone Gunman
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "mutation18", false))	//Bleed Out Versus
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "mutation19", false))	//Taaannnkk!
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "mutation20", false))	//Healing Gnome
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "community1", false))	//Special Delivery
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "community2", false))	//Flu Season
-		g_iGameMode = GAMEMODE_COOP;
-	else if(StrEqual(strGameMode, "community3", false))	//Riding My Survivor
-		g_iGameMode = GAMEMODE_VERSUS;
-	else if(StrEqual(strGameMode, "community4", false))	//Nightmare
-		g_iGameMode = GAMEMODE_SURVIVAL;
-	else if(StrEqual(strGameMode, "community5", false))	//Death's Door
-		g_iGameMode = GAMEMODE_COOP;
-	else
-		g_iGameMode = GAMEMODE_UNKNOWN;
-}
 
 /*======================================================================================
 #################             A C S   C H A N G E   M A P              #################
