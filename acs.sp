@@ -111,7 +111,6 @@ ConVar g_hCVar_ChMapBroadcastInterval;	//The interval for advertising "!chmap"
 
 Handle g_hTimer_Broadcast;
 
-
 /*=========================================================
 #########       Mission Cycle Data Storage        #########
 =========================================================*/
@@ -119,147 +118,37 @@ Handle g_hTimer_Broadcast;
 #define LEN_CFG_SEGMENT 128
 #define CHAR_CYCLE_SEPARATOR "// 3-rd maps(Do not delete/modify this line!)"
 
-ArrayList g_hInt_CoopMapIndexes;
-ArrayList g_hBool_CoopNameHasTranslation;
-int g_int_CoopCyclingCount;
-ArrayList g_hInt_VersusMapIndexes;
-ArrayList g_hBool_VersusNameHasTranslation;
-int g_int_VersusCyclingCount;
-ArrayList g_hInt_ScavengeMapIndexes;
-ArrayList g_hBool_ScavengeNameHasTranslation;
-int g_int_ScavengeCyclingCount;
-ArrayList g_hInt_SurvivalMapIndexes;
-ArrayList g_hBool_SurvivalNameHasTranslation;
-int g_int_SurvivalCyclingCount;
+ArrayList g_hInt_MapIndexes[COUNT_LMM_GAMEMODE];
+int g_int_CyclingCount[COUNT_LMM_GAMEMODE];
 
 void ACS_InitLists() {
-	g_hInt_CoopMapIndexes = new ArrayList(1);
-	// g_hBool_CoopNameHasTranslation = new ArrayList(1);
-	g_int_CoopCyclingCount=0;
-	g_hInt_VersusMapIndexes = new ArrayList(1);
-	// g_hBool_VersusNameHasTranslation = new ArrayList(1);
-	g_int_VersusCyclingCount=0;
-	g_hInt_ScavengeMapIndexes = new ArrayList(1);
-	// g_hBool_ScavengeNameHasTranslation = new ArrayList(1);
-	g_int_ScavengeCyclingCount=0;
-	g_hInt_SurvivalMapIndexes = new ArrayList(1);
-	// g_hBool_SurvivalNameHasTranslation = new ArrayList(1);
-	g_int_SurvivalCyclingCount=0;
+	for (int gamemode=0; gamemode<COUNT_LMM_GAMEMODE; gamemode++) {
+		g_hInt_MapIndexes[gamemode] = new ArrayList(1);
+		g_int_CyclingCount[gamemode] = 0;
+	}
 }
 
 void ACS_FreeLists() {
-	delete g_hInt_CoopMapIndexes;
-	delete g_hBool_CoopNameHasTranslation;
-	delete g_hInt_VersusMapIndexes;
-	delete g_hBool_VersusNameHasTranslation;
-	delete g_hInt_ScavengeMapIndexes;
-	delete g_hBool_ScavengeNameHasTranslation;
-	delete g_hInt_SurvivalMapIndexes;
-	delete g_hBool_SurvivalNameHasTranslation;
+	for (int gamemode=0; gamemode<COUNT_LMM_GAMEMODE; gamemode++) {
+		delete g_hInt_MapIndexes[gamemode];
+	}
 }
 
 ArrayList ACS_GetMissionIndexList(LMM_GAMEMODE gamemode) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return g_hInt_CoopMapIndexes;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return g_hInt_VersusMapIndexes;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return g_hInt_ScavengeMapIndexes;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return g_hInt_SurvivalMapIndexes;
-		}
-	}
-	
-	return null;
-}
-
-ArrayList ACS_NewHasTranslationList(LMM_GAMEMODE gamemode) {
-	ArrayList hasTranslationList = new ArrayList(1, ACS_GetMissionIndexList(gamemode).Length);
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			g_hBool_CoopNameHasTranslation = hasTranslationList;
-			return hasTranslationList;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			g_hBool_VersusNameHasTranslation = hasTranslationList;
-			return hasTranslationList;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			g_hBool_ScavengeNameHasTranslation = hasTranslationList;
-			return hasTranslationList;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			g_hBool_SurvivalNameHasTranslation = hasTranslationList;
-			return hasTranslationList;
-		}
-	}
-	
-	return null;
-}
-
-ArrayList ACS_GetHasTranslationList(LMM_GAMEMODE gamemode) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return g_hBool_CoopNameHasTranslation;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return g_hBool_VersusNameHasTranslation;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return g_hBool_ScavengeNameHasTranslation;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return g_hBool_SurvivalNameHasTranslation;
-		}
-	}
-	
-	return null;
+	return g_hInt_MapIndexes[view_as<int> gamemode];
 }
 
 void ACS_SetCyclingCount(LMM_GAMEMODE gamemode, int count) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			g_int_CoopCyclingCount = count;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			g_int_VersusCyclingCount = count;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			g_int_ScavengeCyclingCount = count;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			g_int_SurvivalCyclingCount = count;
-		}
-	}
+	g_int_CyclingCount[view_as<int>gamemode] = count;
 }
 
 // Used by the ACS
 int ACS_GetCycledMissionCount(LMM_GAMEMODE gamemode) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return g_int_CoopCyclingCount;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return g_int_VersusCyclingCount;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return g_int_ScavengeCyclingCount;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return g_int_SurvivalCyclingCount;
-		}
-	}
-	
-	return -1;
+	return g_int_CyclingCount[view_as<int>gamemode];
 }
 
 int ACS_GetMissionCount(LMM_GAMEMODE gamemode){
-	ArrayList missionIndexList = ACS_GetMissionIndexList(gamemode);
-	return missionIndexList.Length;
+	return ACS_GetMissionIndexList(gamemode).Length;
 }
 
 int ACS_GetFirstMapName(LMM_GAMEMODE gamemode, int cycleIndex, char[] mapname, int length){
@@ -284,85 +173,12 @@ int ACS_GetLastMapName(LMM_GAMEMODE gamemode, int cycleIndex, char[] mapname, in
 }
 
 bool ACS_GetLocalizedMissionName(LMM_GAMEMODE gamemode, int cycleIndex, int client, char[] localizedName, int length) {
-	ArrayList hasTranslationList = ACS_GetMissionIndexList(gamemode);
-	if (hasTranslationList == null)
+	ArrayList missionIndexList = ACS_GetMissionIndexList(gamemode);
+	if (missionIndexList == null)
 		return false;
 	
-	char missionName[LEN_MISSION_NAME];
-	int missionIndex = hasTranslationList.Get(cycleIndex);
-	LMM_GetMissionName(gamemode, missionIndex, missionName, sizeof(missionName));
-	if (ACS_GetHasTranslationList(gamemode).Get(cycleIndex, 0, true) > 0) {
-		// Has translation
-		Format(localizedName, length, "%T", missionName, client);
-		return true;
-	} else {
-		strcopy(localizedName, length, missionName);
-		return false;
-	}
-}
-
-/*================================================================
-#########       Mission Name Localization Parsing        #########
-=================================================================*/
-LMM_GAMEMODE g_MissionNameLocalization_Gamemode;
-int g_MissionNameLocalization_State;
-int g_MissionNameLocalization_UnknownCurLayer;
-int g_MissionNameLocalization_UnknownPreState;
-#define MNLS_UNKNOWN -1
-#define MNLS_ROOT 0
-#define MNLS_PHRASES 1
-public SMCResult MissionNameLocalizationParser_NewSection(SMCParser smc, const char[] name, bool opt_quotes) {
-	switch (g_MissionNameLocalization_State) {
-		case MNLS_ROOT: {
-			if(strcmp("Phrases", name, false)==0) {
-				g_MissionNameLocalization_State = MNLS_PHRASES;
-			} else {
-				g_MissionNameLocalization_UnknownPreState = g_MissionNameLocalization_State;
-				g_MissionNameLocalization_UnknownCurLayer = 1;
-				g_MissionNameLocalization_State = MNLS_UNKNOWN;
-			}
-		}
-		case MNLS_PHRASES: {
-			int index = LMM_FindMissionIndexByName(g_MissionNameLocalization_Gamemode, name);
-			if (index > -1) {
-				ArrayList missionIndexList = ACS_GetMissionIndexList(g_MissionNameLocalization_Gamemode);
-				index = missionIndexList.FindValue(index);
-				ACS_GetHasTranslationList(g_MissionNameLocalization_Gamemode).Set(index, 1, 0, true);
-			}
-			
-			// Do not traverse further
-			g_MissionNameLocalization_UnknownPreState = g_MissionNameLocalization_State;
-			g_MissionNameLocalization_UnknownCurLayer = 1;
-			g_MissionNameLocalization_State = MNLS_UNKNOWN;
-		}
-		
-		case MNLS_UNKNOWN: { // Traverse through unknown structures
-			g_MissionNameLocalization_UnknownCurLayer++;
-		}
-	}
-	
-	return SMCParse_Continue;
-}
-
-public SMCResult MissionNameLocalizationParser_KeyValue(SMCParser smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes) {
-	return SMCParse_Continue;
-}
-
-public SMCResult MissionNameLocalizationParser_EndSection(SMCParser parser) {
-	switch (g_MissionNameLocalization_State) {
-		case MNLS_PHRASES: {
-			return SMCParse_Halt;
-		}
-		
-		case MNLS_UNKNOWN: { // Traverse through unknown structures
-			g_MissionNameLocalization_UnknownCurLayer--;
-			if (g_MissionNameLocalization_UnknownCurLayer == 0) {
-				g_MissionNameLocalization_State = g_MissionNameLocalization_UnknownPreState;
-			}
-		}
-	}
-	
-	return SMCParse_Continue;
+	int missionIndex = missionIndexList.Get(cycleIndex);
+	return LMM_GetMissionLocalizedName(gamemode, missionIndex, localizedName, length, client) > 0;
 }
 
 /*====================================================
@@ -519,31 +335,6 @@ void LoadMissionList(LMM_GAMEMODE gamemode) {
 	
 	delete missionCycleFile;
 	// Mission list is complete and finalized
-	
-	// Check existance of default(English) localization
-	char mapsPhrasesEnglish[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, mapsPhrasesEnglish, sizeof(mapsPhrasesEnglish), "translations/maps.phrases.txt");
-
-	if (!FileExists(mapsPhrasesEnglish)) {
-		// TO-DO:
-	}
-	
-	LoadTranslations("maps.phrases");
-	
-	// Init array
-	ACS_NewHasTranslationList(gamemode);
-	SMCParser parser = SMC_CreateParser();
-	parser.OnEnterSection = MissionNameLocalizationParser_NewSection;
-	parser.OnKeyValue = MissionNameLocalizationParser_KeyValue;
-	parser.OnLeaveSection = MissionNameLocalizationParser_EndSection;
- 
-	g_MissionNameLocalization_Gamemode = gamemode;
-	g_MissionNameLocalization_State = MNLS_ROOT;
-	
-	SMCError err = parser.ParseFile(mapsPhrasesEnglish);
-	if (err != SMCError_Okay) {
-		LogError("An error occured while parsing maps.phrases.txt(English), code:%d", err);
-	}
 }
 
 void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
@@ -1035,6 +826,12 @@ EnumerateMissions() {
 /*===================================================
 #########       Localization support        #########
 ===================================================*/
+int g_MissionNameLocalization_State;
+int g_MissionNameLocalization_UnknownCurLayer;
+int g_MissionNameLocalization_UnknownPreState;
+#define MNLS_UNKNOWN -1
+#define MNLS_ROOT 0
+#define MNLS_PHRASES 1
 public SMCResult MissionNameLocalization_NewSection(SMCParser smc, const char[] name, bool opt_quotes) {
 	switch (g_MissionNameLocalization_State) {
 		case MNLS_ROOT: {
