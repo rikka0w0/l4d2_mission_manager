@@ -98,25 +98,27 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 /* ========== Register Native APIs ========== */
 Handle g_hForward_OnLMMUpdateList;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
-   CreateNative("LMM_GetCurrentGameMode", Native_GetCurrentGameMode);
-   CreateNative("LMM_StringToGamemode", Native_StringToGamemode);
-   CreateNative("LMM_GamemodeToString", Native_GamemodeToString);
+	CreateNative("LMM_GetCurrentGameMode", Native_GetCurrentGameMode);
+	CreateNative("LMM_StringToGamemode", Native_StringToGamemode);
+	CreateNative("LMM_GamemodeToString", Native_GamemodeToString);
+	CreateNative("LMM_GamemodeToGID", Native_GamemodeToGID);
+	CreateNative("LMM_GIDToGamemode", Native_GIDToGamemode);
+
+	CreateNative("LMM_GetNumberOfMissions", Native_GetNumberOfMissions);
+	CreateNative("LMM_FindMissionIndexByName", Native_FindMissionIndexByName);
+	CreateNative("LMM_GetMissionName", Native_GetMissionName);
+	CreateNative("LMM_GetMissionLocalizedName", Native_GetMissionLocalizedName);
    
-   CreateNative("LMM_GetNumberOfMissions", Native_GetNumberOfMissions);
-   CreateNative("LMM_FindMissionIndexByName", Native_FindMissionIndexByName);
-   CreateNative("LMM_GetMissionName", Native_GetMissionName);
-   CreateNative("LMM_GetMissionLocalizedName", Native_GetMissionLocalizedName);
+	CreateNative("LMM_GetNumberOfMaps", Native_GetNumberOfMaps);
+	CreateNative("LMM_FindMapIndexByName", Native_FindMapIndexByName);
+	CreateNative("LMM_GetMapName", Native_GetMapName);
+	CreateNative("LMM_GetMapLocalizedName", Native_GetMapLocalizedName);
    
-   CreateNative("LMM_GetNumberOfMaps", Native_GetNumberOfMaps);
-   CreateNative("LMM_FindMapIndexByName", Native_FindMapIndexByName);
-   CreateNative("LMM_GetMapName", Native_GetMapName);
-   CreateNative("LMM_GetMapLocalizedName", Native_GetMapLocalizedName);
-   
-   CreateNative("LMM_GetNumberOfInvalidMissions", Native_GetNumberOfInvalidMissions);
-   CreateNative("LMM_GetInvalidMissionName", Native_GetInvalidMissionName);
-   g_hForward_OnLMMUpdateList = CreateGlobalForward("OnLMMUpdateList", ET_Ignore);
-   RegPluginLibrary("l4d2_mission_manager");
-   return APLRes_Success;
+	CreateNative("LMM_GetNumberOfInvalidMissions", Native_GetNumberOfInvalidMissions);
+	CreateNative("LMM_GetInvalidMissionName", Native_GetInvalidMissionName);
+	g_hForward_OnLMMUpdateList = CreateGlobalForward("OnLMMUpdateList", ET_Ignore);
+	RegPluginLibrary("l4d2_mission_manager");
+	return APLRes_Success;
 }
 
 void FireEvent_OnLMMUpdateList() {
@@ -255,6 +257,47 @@ public int Native_GamemodeToString(Handle plugin, int numParams) {
 		return -1;
 		
 	return 0;
+}
+
+public int Native_GamemodeToGID(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	
+	switch (gamemode) {
+		case LMM_GAMEMODE_COOP: {
+			return 0;
+		}
+		case LMM_GAMEMODE_VERSUS: {
+			return 1;
+		}
+		case LMM_GAMEMODE_SCAVENGE: {
+			return 2;
+		}
+		case LMM_GAMEMODE_SURVIVAL: {
+			return 3;
+		}
+	}
+	
+	return -1;
+}
+
+public int Native_GIDToGamemode(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	int gid = GetNativeCell(1);
+	static const LMM_GAMEMODE gamemodes[] = {
+		LMM_GAMEMODE_COOP, LMM_GAMEMODE_VERSUS, LMM_GAMEMODE_SCAVENGE, LMM_GAMEMODE_SURVIVAL
+	};
+	
+	if (gid < 0 || gid > sizeof(gamemodes))
+		return -1;
+		
+	return view_as<int>gamemodes[gid];
 }
 
 /* ========== Mission Parser Outputs ========== */
@@ -903,39 +946,16 @@ void ParseMissions() {
 }
 
 /* ========== Localization File Parser ========== */
-ArrayList g_hBool_CoopMissionNameLocalized;
-ArrayList g_hBool_CoopMapNameLocalized;
-
-ArrayList g_hBool_VersusMissionNameLocalized;
-ArrayList g_hBool_VersusMapNameLocalized;
-
-ArrayList g_hBool_ScavengeMissionNameLocalized;
-ArrayList g_hBool_ScavengeMapNameLocalized;
-
-ArrayList g_hBool_SurvicalMissionNameLocalized;
-ArrayList g_hBool_SurvicalMapNameLocalized;
+ArrayList g_hBool_MissionNameLocalized[COUNT_LMM_GAMEMODE];
+ArrayList g_hBool_MapNameLocalized[COUNT_LMM_GAMEMODE];
 
 void LMM_NewLocalizedList(LMM_GAMEMODE gamemode) {
 	ArrayList missionLocalizedList = new ArrayList(1, LMM_GetNumberOfMissions(gamemode));
 	ArrayList mapLocalizedList = new ArrayList(1, LMM_GetMapList(gamemode).Length);
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			g_hBool_CoopMissionNameLocalized = missionLocalizedList;
-			g_hBool_CoopMapNameLocalized = mapLocalizedList;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			g_hBool_VersusMissionNameLocalized = missionLocalizedList;
-			g_hBool_VersusMapNameLocalized = mapLocalizedList;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			g_hBool_ScavengeMissionNameLocalized = missionLocalizedList;
-			g_hBool_ScavengeMapNameLocalized = mapLocalizedList;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			g_hBool_SurvicalMissionNameLocalized = missionLocalizedList;
-			g_hBool_SurvicalMapNameLocalized = mapLocalizedList;
-		}
-	}
+	
+	int gid = LMM_GamemodeToGID(gamemode);
+	g_hBool_MissionNameLocalized[gid] = missionLocalizedList;
+	g_hBool_MapNameLocalized[gid] = mapLocalizedList;
 	
 	for (int i=0; i<missionLocalizedList.Length; i++) {
 		missionLocalizedList.Set(i, 0, 0);
@@ -947,55 +967,18 @@ void LMM_NewLocalizedList(LMM_GAMEMODE gamemode) {
 }
 
 void LMM_FreeLocalizedLists() {
-	delete g_hBool_CoopMissionNameLocalized;
-	delete g_hBool_CoopMapNameLocalized;
-
-	delete g_hBool_VersusMissionNameLocalized;
-	delete g_hBool_VersusMapNameLocalized;
-
-	delete g_hBool_ScavengeMissionNameLocalized;
-	delete g_hBool_ScavengeMapNameLocalized;
-
-	delete g_hBool_SurvicalMissionNameLocalized;
-	delete g_hBool_SurvicalMapNameLocalized;
+	for (int gid=0; gid<COUNT_LMM_GAMEMODE; gid++) {
+		delete g_hBool_MissionNameLocalized[gid];
+		delete g_hBool_MapNameLocalized[gid];
+	}
 }
 
 ArrayList LMM_GetMissionLocalizedList(LMM_GAMEMODE gamemode) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return g_hBool_CoopMissionNameLocalized;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return g_hBool_VersusMissionNameLocalized;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return g_hBool_ScavengeMissionNameLocalized;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return g_hBool_SurvicalMissionNameLocalized;
-		}
-	}
-	
-	return null;
+	return g_hBool_MissionNameLocalized[LMM_GamemodeToGID(gamemode)];
 }
 
 ArrayList LMM_GetMapLocalizedList(LMM_GAMEMODE gamemode) {
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return g_hBool_CoopMapNameLocalized;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return g_hBool_VersusMapNameLocalized;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return g_hBool_ScavengeMapNameLocalized;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return g_hBool_SurvicalMapNameLocalized;
-		}
-	}
-	
-	return null;
+	return g_hBool_MapNameLocalized[LMM_GamemodeToGID(gamemode)];
 }
 /*================================================================
 #########       Mission Name Localization Parsing        #########
@@ -1023,6 +1006,7 @@ public SMCResult LocalizationParser_NewSection(SMCParser smc, const char[] name,
 			if (g_MissionNameLocalization_ParsingMissionLocalization) {
 				int missionIndex = LMM_FindMissionIndexByName(g_MissionNameLocalization_Gamemode, name);
 				if (missionIndex > -1) {
+					
 					ArrayList missionLocalizationList = LMM_GetMissionLocalizedList(g_MissionNameLocalization_Gamemode);
 					missionLocalizationList.Set(missionIndex, 1, 0);
 				}

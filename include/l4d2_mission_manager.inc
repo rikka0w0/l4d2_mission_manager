@@ -8,6 +8,8 @@
 #define LEN_GAMEMODE_NAME 32	// e.g. coop, versus, scavenge, survival
 #define LEN_MISSION_LOCALIZED_NAME 64
 
+#define COUNT_LMM_GAMEMODE 4
+
 enum LMM_GAMEMODE
 {
 	LMM_GAMEMODE_UNKNOWN = 0,
@@ -20,6 +22,8 @@ enum LMM_GAMEMODE
 native LMM_GAMEMODE LMM_GetCurrentGameMode();
 native LMM_GAMEMODE LMM_StringToGamemode(const char[] name);
 native int LMM_GamemodeToString(LMM_GAMEMODE gamemode, char[] name, int length);
+native int LMM_GamemodeToGID(LMM_GAMEMODE gamemode);
+native LMM_GAMEMODE LMM_GIDToGamemode(int gid);
 
 native int LMM_GetNumberOfMissions(LMM_GAMEMODE gamemode);
 native int LMM_FindMissionIndexByName(LMM_GAMEMODE gamemode, const char[] missionName);
