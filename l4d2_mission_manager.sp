@@ -70,7 +70,7 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 	int missionCount = LMM_GetNumberOfMissions(gamemode);
 	char missionName[LEN_MISSION_NAME];
 	char mapName[LEN_MAP_FILENAME];
-	char localizedName[LEN_MISSION_LOCALIZED_NAME];
+	char localizedName[LEN_LOCALIZED_NAME];
 	
 	ReplyToCommand(client, "Gamemode = %s (%d missions)", gamemodeName, missionCount);
 
@@ -410,7 +410,7 @@ public int Native_GetMissionLocalizedName(Handle plugin, int numParams) {
 	
 	ArrayList missionLocalizedList = LMM_GetMissionLocalizedList(gamemode);
 	if (missionLocalizedList.Get(missionIndex) > 0) {
-		char localizedName[LEN_MISSION_LOCALIZED_NAME];
+		char localizedName[LEN_LOCALIZED_NAME];
 		Format(localizedName, sizeof(localizedName), "%T", missionName, client);
 		if (SetNativeString(3, localizedName, length, false) != SP_ERROR_NONE)
 			return -1;
@@ -534,7 +534,7 @@ public int Native_GetMapLocalizedName(Handle plugin, int numParams) {
 	
 	ArrayList mapLocalizedList = LMM_GetMapLocalizedList(gamemode);
 	if (mapLocalizedList.Get(offset + mapIndex) > 0) {
-		char localizedName[LEN_MISSION_LOCALIZED_NAME];
+		char localizedName[LEN_LOCALIZED_NAME];
 		Format(localizedName, sizeof(localizedName), "%T", mapFileName, client);
 		if (SetNativeString(4, localizedName, length, false) != SP_ERROR_NONE)
 			return -1;

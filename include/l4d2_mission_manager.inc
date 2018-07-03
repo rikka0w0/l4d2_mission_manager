@@ -6,7 +6,7 @@
 #define LEN_MISSION_NAME 64		// e.g. L4D2C1
 #define LEN_MAP_FILENAME 64		// e.g. c1m1_hotel
 #define LEN_GAMEMODE_NAME 32	// e.g. coop, versus, scavenge, survival
-#define LEN_MISSION_LOCALIZED_NAME 64
+#define LEN_LOCALIZED_NAME 64
 
 #define COUNT_LMM_GAMEMODE 4
 

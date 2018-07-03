@@ -151,23 +151,21 @@ int ACS_GetMissionCount(LMM_GAMEMODE gamemode){
 	return ACS_GetMissionIndexList(gamemode).Length;
 }
 
-int ACS_GetFirstMapName(LMM_GAMEMODE gamemode, int cycleIndex, char[] mapname, int length){
+int ACS_GetMissionIndex(LMM_GAMEMODE gamemode, int cycleIndex) {
 	ArrayList missionIndexList = ACS_GetMissionIndexList(gamemode);
 	if (missionIndexList == null) {
 		return -1;
 	}
 	
-	int iMission = missionIndexList.Get(cycleIndex);
-	return LMM_GetMapName(gamemode, iMission, 0, mapname, length);
+	return missionIndexList.Get(cycleIndex);
+}
+
+int ACS_GetFirstMapName(LMM_GAMEMODE gamemode, int cycleIndex, char[] mapname, int length){
+	return LMM_GetMapName(gamemode, ACS_GetMissionIndex(gamemode, cycleIndex), 0, mapname, length);
 }
 
 int ACS_GetLastMapName(LMM_GAMEMODE gamemode, int cycleIndex, char[] mapname, int length){
-	ArrayList missionIndexList = ACS_GetMissionIndexList(gamemode);
-	if (missionIndexList == null) {
-		return -1;
-	}
-	
-	int iMission = missionIndexList.Get(cycleIndex);
+	int iMission = ACS_GetMissionIndex(gamemode, cycleIndex);
 	int mapCount = LMM_GetNumberOfMaps(gamemode, iMission);
 	return LMM_GetMapName(gamemode, iMission, mapCount-1, mapname, length);
 }
@@ -364,6 +362,225 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 		}
 	}
 	ReplyToCommand(client, "-------------------");
+}
+
+/*===========================================
+#########       Menu Systems        #########
+===========================================*/
+#define MMC_ITEM_LEN_INFO 16
+#define MMC_ITEM_LEN_NAME 16
+#define MMC_ITEM_IDONTCARE_TEXT "I dont care"
+#define MMC_ITEM_ALLMAPS_TEXT "All maps"
+#define MMC_ITEM_MISSION_TEXT "Mission"
+#define MMC_ITEM_MAP_TEXT "Map"
+bool ShowMissionChooser(int iClient, bool isMap, bool isVote) {
+	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
+		return false;
+	
+	//Create the menu
+	Menu chooser = CreateMenu(MissionChooserMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End);
+		
+	if (isMap) {
+		chooser.SetTitle("%T", "Choose a Map", iClient);
+		if (isVote) {
+			chooser.AddItem(MMC_ITEM_IDONTCARE_TEXT, "N/A");
+		}
+		chooser.AddItem(MMC_ITEM_ALLMAPS_TEXT, "N/A");
+	} else {
+		chooser.SetTitle("%T", "Choose a Mission", iClient);
+		if (isVote) {
+			chooser.AddItem(MMC_ITEM_IDONTCARE_TEXT, "N/A");
+		}
+	}
+	
+	char menuName[20];
+	for(int cycleIndex = 0; cycleIndex < ACS_GetMissionCount(g_iGameMode); cycleIndex++) {
+		IntToString(cycleIndex, menuName, sizeof(menuName));
+		chooser.AddItem(MMC_ITEM_MISSION_TEXT, menuName);
+	}
+	
+	//Add an exit button
+	chooser.ExitButton = true;
+	
+	//And finally, show the menu to the client
+	chooser.Display(iClient, MENU_TIME_FOREVER);
+	
+	//Play a sound to indicate that the user can vote on a map
+	EmitSoundToClient(iClient, SOUND_NEW_VOTE_START);
+	
+	return true;	
+}
+
+public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, int item) {
+	if (action == MenuAction_End) {
+		delete menu;
+		return 0;
+	}
+	
+	char menuInfo[MMC_ITEM_LEN_INFO];
+	char menuName[MMC_ITEM_LEN_NAME];
+	char localizedName[LEN_LOCALIZED_NAME];
+	
+	// Change the map to the selected item.
+	if(action == MenuAction_Select)	{
+		if (item < 0) { // Not a valid map option
+			return 0;
+		}
+
+		// Find out the current menu mode
+		menu.GetItem(0, menuInfo, sizeof(menuInfo));
+		if (StrEqual(menuInfo, MMC_ITEM_IDONTCARE_TEXT, false)) {
+			// Voting mode
+			if (item == 0) {
+				// "I dont care" is selected
+				PrintToServer("\"I dont care\" is selected");
+				return 0;
+			} else {
+				// Other vote mode menu items
+				menu.GetItem(1, menuInfo, sizeof(menuInfo));
+				if (StrEqual(menuInfo, MMC_ITEM_ALLMAPS_TEXT, false)) {
+					// Voting for a map
+					if (item == 1) {
+						// "All map" is selected, prepare map list for all missions
+						ShowMapChooser(client, true, -1);
+						PrintToServer("ACS: \"All map\" is selected");
+					} else {
+						// A mission is selected, prepare a map list for the selected mission
+						menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+						int cycleIndex = StringToInt(menuName);
+						ShowMapChooser(client, true, cycleIndex);
+						
+						ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
+						PrintToServer("ACS: a mission \"%s\" is chosen", localizedName);	
+					}
+				} else {
+					// Voting for a mission
+					menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+					int cycleIndex = StringToInt(menuName);
+					ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
+				
+					PrintToServer("ACS: a mission \"%s\" is chosen", localizedName);					
+				}
+			}
+		} else {
+			// Chmap mode
+			if (StrEqual(menuInfo, MMC_ITEM_ALLMAPS_TEXT, false)) {
+				if (item == 0) {
+					// "All map" is selected, prepare map list for all missions
+					ShowMapChooser(client, false, -1);
+					PrintToServer("Chmap: \"All map\" is selected");
+				} else {
+					// A mission is selected, prepare a map list for the selected mission
+					menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+					int cycleIndex = StringToInt(menuName);
+					ShowMapChooser(client, false, cycleIndex);
+					
+					ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
+					PrintToServer("Chmap: prepare map list for \"%s\"", localizedName);
+				}
+				// Browse map list
+			} else {
+				// A mission is chosen
+				menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+				int cycleIndex = StringToInt(menuName);
+				
+				ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
+				PrintToServer("Chmap: a mission \"%s\" is chosen", localizedName);
+			}
+		}
+		
+	} else if (action == MenuAction_DisplayItem) {
+		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+		if (StrEqual(menuInfo, MMC_ITEM_MISSION_TEXT, false)) {
+			int cycleIndex = StringToInt(menuName);
+			// Localize mission name
+			ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));		
+		} else {
+			// Localize other menu items
+			Format(localizedName, sizeof(localizedName), "%T", menuInfo, client);
+		}
+		RedrawMenuItem(localizedName);
+	}
+	
+	return 0;
+}
+
+bool ShowMapChooser(int iClient, bool isVote, int cycleIndex) {
+	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
+		return false;
+	
+	int flags = isVote ? 1 : 0;
+	char menuInfo[MMC_ITEM_LEN_INFO];
+	IntToString(flags, menuInfo, sizeof(menuInfo));	// Use menu info to store the status of isVote
+	
+	//Create the menu
+	Menu chooser = CreateMenu(MapChooserMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End | MenuAction_Cancel);
+	
+	char menuName[MMC_ITEM_LEN_NAME];
+	if (cycleIndex < 0) {
+		// Show all maps at once
+		for (cycleIndex = 0; cycleIndex<ACS_GetMissionCount(g_iGameMode); cycleIndex++) {
+			int missionIndex = ACS_GetMissionIndex(g_iGameMode, cycleIndex);
+			for (int mapIndex=0; mapIndex<LMM_GetNumberOfMaps(g_iGameMode, missionIndex); mapIndex++) {
+				Format(menuName, sizeof(menuName), "%d,%d", missionIndex, mapIndex);
+				chooser.AddItem(menuInfo, menuName);
+			}			
+		}
+	} else {
+		int missionIndex = ACS_GetMissionIndex(g_iGameMode, cycleIndex);
+		for (int mapIndex=0; mapIndex<LMM_GetNumberOfMaps(g_iGameMode, missionIndex); mapIndex++) {
+			Format(menuName, sizeof(menuName), "%d,%d", missionIndex, mapIndex);
+			chooser.AddItem(menuInfo, menuName);
+		}
+	}
+	
+	//Add an exitBack button
+	chooser.ExitBackButton = true;
+	
+	//And finally, show the menu to the client
+	chooser.Display(iClient, MENU_TIME_FOREVER);
+	
+	//Play a sound to indicate that the user can vote on a map
+	EmitSoundToClient(iClient, SOUND_NEW_VOTE_START);
+	
+	return true;	
+}
+
+public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int item) {
+	if (action == MenuAction_End) {
+		delete menu;
+		return 0;
+	}
+	
+	char menuInfo[MMC_ITEM_LEN_INFO];
+	char menuName[MMC_ITEM_LEN_NAME];
+	char localizedName[LEN_LOCALIZED_NAME];
+
+	char buffer_split[3][MMC_ITEM_LEN_NAME];
+	
+	if (action == MenuAction_Cancel) {
+		if (item == MenuCancel_ExitBack) {
+			// Open main menu
+			menu.GetItem(0, menuInfo, sizeof(menuInfo));
+			ShowMissionChooser(client, true, StrEqual(menuInfo, "1", false));
+		}
+	} else if (action == MenuAction_DisplayItem) {
+		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		int missionIndex = StringToInt(buffer_split[0]);
+		int mapIndex = StringToInt(buffer_split[1]);
+		LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
+		RedrawMenuItem(localizedName);
+	} else if (action == MenuAction_Select)	{
+		if (item < 0) { // Not a valid map option
+			return 0;
+		}
+		
+		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
+		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		int missionIndex = StringToInt(buffer_split[0]);
+		int mapIndex = StringToInt(buffer_split[1]);		
+	}
 }
 
 public void OnAllPluginsLoaded() {
@@ -1889,6 +2106,8 @@ public Action Command_ChangeMapVote(int iClient, int args) {
 	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
 		return Plugin_Handled;
 	
+	ShowMissionChooser(iClient, true, false);
+	return Plugin_Handled;	
 	//Create the menu
 	Menu menuVoteCampaign = CreateMenu(VoteCampaignMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End);
 	
