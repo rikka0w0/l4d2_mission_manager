@@ -67,6 +67,7 @@
 #define WAIT_TIME_BEFORE_SWITCH_COOP			7.0
 #define WAIT_TIME_BEFORE_SWITCH_VERSUS			6.0
 #define WAIT_TIME_BEFORE_SWITCH_SCAVENGE		11.0
+#define WAIT_TIME_BEFORE_SWITCH_SURVIVAL		11.0
 
 //Define Game Modes
 #define GAMEMODE_UNKNOWN	LMM_GAMEMODE_UNKNOWN
@@ -106,7 +107,6 @@ ConVar g_hCVar_VotingAdDelayTime;		//Time to wait before showing advertising
 ConVar g_hCVar_NextMapAdMode;			//The way to advertise the next map 
 ConVar g_hCVar_NextMapAdInterval;		//Interval for ACS next map advertisement
 ConVar g_hCVar_MaxFinaleFailures;		//Amount of times Survivors can fail before ACS switches in coop
-ConVar g_hCVar_ChMapAnnounceMode;		//How to advertise "!chmap"
 ConVar g_hCVar_ChMapBroadcastInterval;	//The interval for advertising "!chmap"
 
 Handle g_hTimer_Broadcast;
@@ -443,15 +443,11 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 					if (item == 1) {
 						// "All map" is selected, prepare map list for all missions
 						ShowMapChooser(client, true, -1);
-						PrintToServer("ACS: \"All map\" is selected");
 					} else {
 						// A mission is selected, prepare a map list for the selected mission
 						menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 						int cycleIndex = StringToInt(menuName);
-						ShowMapChooser(client, true, cycleIndex);
-						
-						ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
-						PrintToServer("ACS: a mission \"%s\" is chosen", localizedName);	
+						ShowMapChooser(client, true, cycleIndex);	
 					}
 				} else {
 					// Voting for a mission
@@ -468,24 +464,23 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 				if (item == 0) {
 					// "All map" is selected, prepare map list for all missions
 					ShowMapChooser(client, false, -1);
-					PrintToServer("Chmap: \"All map\" is selected");
 				} else {
 					// A mission is selected, prepare a map list for the selected mission
 					menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 					int cycleIndex = StringToInt(menuName);
 					ShowMapChooser(client, false, cycleIndex);
-					
-					ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
-					PrintToServer("Chmap: prepare map list for \"%s\"", localizedName);
 				}
 				// Browse map list
 			} else {
+				if (IsVoteInProgress()) {
+					ReplyToCommand(client, "[ACS] %t", "Vote in Progress");
+					return 0;
+				}
+			
 				// A mission is chosen
 				menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 				int cycleIndex = StringToInt(menuName);
-				
-				ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
-				PrintToServer("Chmap: a mission \"%s\" is chosen", localizedName);
+				ShowChmapVoteToAll(ACS_GetMissionIndex(g_iGameMode, cycleIndex), -1);
 			}
 		}
 		
@@ -515,6 +510,7 @@ bool ShowMapChooser(int iClient, bool isVote, int cycleIndex) {
 	
 	//Create the menu
 	Menu chooser = CreateMenu(MapChooserMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End | MenuAction_Cancel);
+	chooser.SetTitle("%T", "Choose a Map", iClient);
 	
 	char menuName[MMC_ITEM_LEN_NAME];
 	if (cycleIndex < 0) {
@@ -576,11 +572,154 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 			return 0;
 		}
 		
+		if (IsVoteInProgress()) {
+			ReplyToCommand(client, "[ACS] %t", "Vote in Progress");
+			return 0;
+		}
+		
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
 		int missionIndex = StringToInt(buffer_split[0]);
-		int mapIndex = StringToInt(buffer_split[1]);		
+		int mapIndex = StringToInt(buffer_split[1]);	
+
+		if (StrEqual(menuInfo, "1", false)) {
+			// Vote mode
+		} else {
+			// Chmap mode
+			ShowChmapVoteToAll(missionIndex, mapIndex);
+		}
 	}
+	return 0;
+}
+
+bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
+	Menu menuVote = CreateMenu(ChampVoteHandler, MENU_ACTIONS_ALL);
+	
+	menuVote.SetTitle("To be translated");
+	char menuInfo[MMC_ITEM_LEN_INFO];
+	IntToString(missionIndex, menuInfo, sizeof(menuInfo));
+	menuVote.AddItem(menuInfo, "Yes");
+	IntToString(mapIndex, menuInfo, sizeof(menuInfo));	
+	menuVote.AddItem(menuInfo, "No");
+	menuVote.ExitButton = false;
+	menuVote.DisplayVoteToAll(MENU_TIME_FOREVER);
+}
+
+public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2) {
+	if (action == MenuAction_Display) {
+		// Localize title
+		char localizedName[LEN_LOCALIZED_NAME];
+		char menuInfo[MMC_ITEM_LEN_INFO];
+		menu.GetItem(0, menuInfo, sizeof(menuInfo));
+		int missionIndex = StringToInt(menuInfo);
+		menu.GetItem(1, menuInfo, sizeof(menuInfo));
+		int mapIndex = StringToInt(menuInfo);
+
+		if (mapIndex < 0) {
+			LMM_GetMissionLocalizedName(g_iGameMode, missionIndex, localizedName, sizeof(localizedName), param1);
+		} else {
+			LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), param1);
+		}
+		
+	 	char buffer[255];
+		Format(buffer, sizeof(buffer), "%T", "Change Map To", param1, localizedName);
+		Panel panel = view_as<Panel>(param2);
+		panel.SetTitle(buffer);
+	} else if (action == MenuAction_DisplayItem) {
+		char menuName[MMC_ITEM_LEN_NAME];
+		char buffer[MMC_ITEM_LEN_NAME];
+		menu.GetItem(param2, "", 0, _, menuName, sizeof(menuName));
+		Format(buffer, sizeof(buffer), "%T", menuName, param1);	// param1 = clientIndex
+	 	RedrawMenuItem(buffer);
+	} else if (action == MenuAction_VoteCancel && param1 == VoteCancel_NoVotes) {
+		PrintToChatAll("[ACS] %t", "No Votes Cast");
+	} else if (action == MenuAction_VoteEnd) {
+		// param1: The chosen item, param2: vote result
+		float percent, limit;
+		int votes, totalVotes;
+
+		GetMenuVoteInfo(param2, votes, totalVotes);
+		
+		if (param1 == 1) {
+			votes = totalVotes - votes; // Reverse the votes to be in relation to the Yes option.
+		}
+		
+		percent = float(votes) / float(totalVotes);
+		
+		ConVar limitConVar = FindConVar("sm_vote_map");
+		if (limitConVar == null) {
+			limit = 0.6;
+		} else {
+			limit = limitConVar.FloatValue;
+		}
+		
+		// A multi-argument vote is "always successful", but have to check if its a Yes/No vote.
+		if (param1 == 1) {
+			LogAction(-1, -1, "Vote failed.");
+			PrintToChatAll("[ACS] %t", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), totalVotes);
+		} else {
+			PrintToChatAll("[ACS] %t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
+			
+			char menuInfo[MMC_ITEM_LEN_INFO];
+			menu.GetItem(0, menuInfo, sizeof(menuInfo));
+			int missionIndex = StringToInt(menuInfo);
+			menu.GetItem(1, menuInfo, sizeof(menuInfo));
+			int mapIndex = StringToInt(menuInfo);
+			
+			char localizedName[LEN_MISSION_NAME];
+			char mapName[LEN_MAP_FILENAME];
+			if (mapIndex < 0) {
+				// Vote for mission, switch to its first map
+				LMM_GetMapName(g_iGameMode, missionIndex, 0, mapName, sizeof(mapName));
+				for (int client = 1; client <= MaxClients; client++) {
+					if (IsClientInGame(client)) {
+						LMM_GetMissionLocalizedName(g_iGameMode, missionIndex, localizedName, sizeof(localizedName), client);
+						PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Mission is now winning the vote");
+					}
+				}			
+			} else {
+				// Vote for a map, switch to that map
+				LMM_GetMapName(g_iGameMode, missionIndex, mapIndex, mapName, sizeof(mapName));
+				for (int client = 1; client <= MaxClients; client++) {
+					if (IsClientInGame(client)) {
+						LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
+						PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Map is now winning the vote");
+					}
+				}
+			}
+			
+			PrintToChatAll("[ACS] %t", "Changing map", mapName);
+			CreateChangeMapTimer(mapName);
+		}
+	} else if (action == MenuAction_End) {
+		delete menu;
+	}
+	
+	return 0;
+}
+
+void CreateChangeMapTimer(const char[] mapName) {
+	float delay = 5.0;
+	switch (g_iGameMode) {
+		case LMM_GAMEMODE_COOP: {delay=WAIT_TIME_BEFORE_SWITCH_COOP;}
+		case LMM_GAMEMODE_VERSUS: {delay=WAIT_TIME_BEFORE_SWITCH_VERSUS;}
+		case LMM_GAMEMODE_SCAVENGE: {delay=WAIT_TIME_BEFORE_SWITCH_SCAVENGE;}
+		case LMM_GAMEMODE_SURVIVAL: {delay=WAIT_TIME_BEFORE_SWITCH_SURVIVAL;}
+	}
+	DataPack dp;
+	CreateDataTimer(delay, Timer_ChangeMap, dp); // 
+	dp.WriteString(mapName);
+}
+
+public Action Timer_ChangeMap(Handle timer, DataPack dp) {
+	char mapName[LEN_MAP_FILENAME];
+	
+	dp.Reset();
+	dp.ReadString(mapName, sizeof(mapName));
+	
+	ForceChangeLevel(mapName, "sm_votemap Result");
+	
+	return Plugin_Stop;
 }
 
 public void OnAllPluginsLoaded() {
@@ -742,7 +881,6 @@ stock void SetupMapStrings() {
 	
 	PrintToServer("MapCycle=%s", campaignListFile);	
 	PrintToServer("Num of Campaign=%d, %d", numberOfCyclingCampaignMap, getNumberOfCampaign());
-	Command_MapList(0, 0);
 
 	//The following string variables are only for Scavenge
 	addScavengeMap("c8m1_apartment", "Apartments");
@@ -1182,7 +1320,6 @@ public OnPluginStart() {
 	g_hCVar_NextMapAdMode = CreateConVar("acs_next_map_ad_mode", "2", "Sets how the next campaign/map is advertised during a finale or scavenge map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT]", FCVAR_PLUGIN, true, 0.0, true, 2.0);
 	g_hCVar_NextMapAdInterval = CreateConVar("acs_next_map_ad_interval", "60.0", "The time, in seconds, between advertisements for the next campaign/map on finales and scavenge maps", FCVAR_PLUGIN, true, 60.0, false);
 	g_hCVar_MaxFinaleFailures = CreateConVar("acs_max_coop_finale_failures", "0", "The amount of times the survivors can fail a finale in Coop before it switches to the next campaign [0 = INFINITE FAILURES]", FCVAR_PLUGIN, true, 0.0, false);
-	g_hCVar_ChMapAnnounceMode = CreateConVar("acs_chmap_announce_mode", "3", "Controls how to advertise the \"!chmap\" command, 0 - disabled, 1 - chat, 2 - hint text, 3 - both");
 	g_hCVar_ChMapBroadcastInterval =  CreateConVar("acs_chmap_broadcast_interval", "180.0", "controls the frequency of the \"!chmap\" advertisement, in second.");	
 	
 	//Hook console variable changes
@@ -1193,7 +1330,6 @@ public OnPluginStart() {
 	HookConVarChange(g_hCVar_NextMapAdMode, CVarChange_NewMapAdMode);
 	HookConVarChange(g_hCVar_NextMapAdInterval, CVarChange_NewMapAdInterval);
 	HookConVarChange(g_hCVar_MaxFinaleFailures, CVarChange_MaxFinaleFailures);
-	HookConVarChange(g_hCVar_ChMapAnnounceMode, CVarChange_ChMapBroadcast);
 	HookConVarChange(g_hCVar_ChMapBroadcastInterval, CVarChange_ChMapBroadcast);
 	
 	AutoExecConfig(true, "acs");
@@ -1210,8 +1346,16 @@ public OnPluginStart() {
 	RegConsoleCmd("mapvote", MapVote);
 	RegConsoleCmd("mapvotes", DisplayCurrentVotes);
 	RegConsoleCmd("sm_chmap", Command_ChangeMapVote);
-	RegConsoleCmd("sm_changemapvote", Command_ChangeMapVote);
-	RegConsoleCmd("sm_acs_maps", Command_MapList);
+	RegConsoleCmd("sm_chmap2", Command_ChangeMapVote2);
+	//RegConsoleCmd("sm_acs_maps", Command_MapList);
+}
+
+public Action Command_ChangeMapVote(int iClient, int args) {
+	ShowMissionChooser(iClient, false, false);
+}
+
+public Action Command_ChangeMapVote2(int iClient, int args) {
+	ShowMissionChooser(iClient, true, false);
 }
 
 public void OnConfigsExecuted() {
@@ -1224,7 +1368,7 @@ void MakeChMapBroadcastTimer() {
 		g_hTimer_Broadcast = null;
 	}
 
-	if(g_hCVar_ChMapAnnounceMode.IntValue != 0)
+	if(g_hCVar_ChMapBroadcastInterval.FloatValue > 0)
 		g_hTimer_Broadcast = CreateTimer(g_hCVar_ChMapBroadcastInterval.FloatValue, Timer_WelcomeMessage, INVALID_HANDLE, TIMER_REPEAT);
 }
 
@@ -2024,182 +2168,4 @@ bool OnFinaleOrScavengeMap() {
 	}
 	
 	return false;
-}
-
-/*======================================================================================
-##########                                 Map Votes                        ###########
-======================================================================================*/
-#define VOTE_NO "###no###"
-#define VOTE_YES "###yes###"
-public int Handler_VoteCallback(Menu menu, MenuAction action, int param1, int param2) {
-	if (action == MenuAction_Display) { // Localize title
-		char title[4];
-		menu.GetTitle(title, sizeof(title));
-		
-		char localizedMapName[LEN_MISSION_NAME];
-	 	char buffer[255];
-		int index = StringToInt(title);
-		getLocalizedMissionName(index, localizedMapName, sizeof(localizedMapName), param1);
-		Format(buffer, sizeof(buffer), "%T", "Change Map To", param1, localizedMapName);
-
-		Panel panel = view_as<Panel>(param2);
-		panel.SetTitle(buffer);
-	} else if (action == MenuAction_DisplayItem) {
-		char display[64];
-		menu.GetItem(param2, "", 0, _, display, sizeof(display));
-	 
-	 	if (strcmp(display, "No") == 0 || strcmp(display, "Yes") == 0)
-	 	{
-			char buffer[255];
-			Format(buffer, sizeof(buffer), "%T", display, param1);
-
-			return RedrawMenuItem(buffer);
-		}
-	} else if (action == MenuAction_VoteCancel && param1 == VoteCancel_NoVotes) {
-		PrintToChatAll("[SM] %t", "No Votes Cast");
-	} else if (action == MenuAction_VoteEnd) {
-		char item[16];
-		float percent, limit;
-		int votes, totalVotes;
-
-		GetMenuVoteInfo(param2, votes, totalVotes);
-		menu.GetItem(param1, item, sizeof(item), _, "", 0);
-		
-		if (strcmp(item, VOTE_NO) == 0 && param1 == 1) {
-			votes = totalVotes - votes; // Reverse the votes to be in relation to the Yes option.
-		}
-		
-		percent = float(votes) / float(totalVotes);
-		
-		ConVar limitConVar = FindConVar("sm_vote_map");
-		if (limitConVar == null) {
-			limit = 0.6;
-		} else {
-			limit = limitConVar.FloatValue;
-		}
-		
-		// A multi-argument vote is "always successful", but have to check if its a Yes/No vote.
-		if (strcmp(item, VOTE_NO) == 0 && param1 == 1) {
-			LogAction(-1, -1, "Vote failed.");
-			PrintToChatAll("[SM] %t", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), totalVotes);
-		} else {
-			PrintToChatAll("[SM] %t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
-			
-			char title[4];
-			menu.GetTitle(title, sizeof(title));
-			
-			char localizedMapName[LEN_MISSION_NAME];
-			int index = StringToInt(title);
-			getLocalizedMissionName(index, localizedMapName, sizeof(localizedMapName), param1);
-			PrintToChatAll("[SM] %t", "Changing map", localizedMapName);
-			
-			CreateTimer(WAIT_TIME_BEFORE_SWITCH_COOP, Timer_ChangeCampaign, index);
-		}
-	} else if (action == MenuAction_End) {
-		delete menu;
-	}
-	
-	return 0;
-}
-
-public Action Command_ChangeMapVote(int iClient, int args) {
-	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
-		return Plugin_Handled;
-	
-	ShowMissionChooser(iClient, true, false);
-	return Plugin_Handled;	
-	//Create the menu
-	Menu menuVoteCampaign = CreateMenu(VoteCampaignMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End);
-	
-	//Populate the menu with the maps in rotation for the corresponding game mode
-	menuVoteCampaign.SetTitle("%T", "Choose a Map", iClient);
-	
-	for(int iCampaign = 0; iCampaign < getNumberOfCampaign(); iCampaign++) {
-		menuVoteCampaign.AddItem("Useless Info", "Name to be translated");
-	}
-	
-	//Add an exit button
-	menuVoteCampaign.ExitButton = true;
-	
-	//And finally, show the menu to the client
-	menuVoteCampaign.Display(iClient, MENU_TIME_FOREVER);
-	
-	//Play a sound to indicate that the user can vote on a map
-	EmitSoundToClient(iClient, SOUND_NEW_VOTE_START);
-	
-	return Plugin_Handled;	
-}
-
-public int VoteCampaignMenuHandler(Menu menu, MenuAction action, int client, int item) {
-	char localizedName[LEN_MISSION_NAME];	
-	// Change the map to the selected item.
-	if(action == MenuAction_Select)	{
-		if (item < 0) {
-			// Not a valid map option
-			return 0;
-		}
-
-		getLocalizedMissionName(item, localizedName, sizeof(localizedName), client);		
-		switch (g_hCVar_ChMapAnnounceMode.IntValue) {
-			case 1: 
-			{
-				PrintToChatAll("\x05[SM] \x04 %t : \x05 %s", "Voting for map", localizedName);
-			}
-			case 2: 
-			{
-				PrintHintTextToAll("\x05[SM] \x04 %t : \x05 %s", "Voting for map", localizedName);
-			}
-			case 3: 
-			{
-				PrintToChatAll("\x05[SM] \x04 %t : \x05 %s", "Voting for map", localizedName);
-				PrintHintTextToAll("\x05[SM] \x04 %t : \x05 %s", "Voting for map", localizedName);
-			}
-			default: 
-			{
-				// Nothing to display
-			}
-		}
-		
-		if (IsVoteInProgress()) {
-			ReplyToCommand(client, "[SM] %t", "Vote in Progress");
-			return 0;
-		} else {
-			char stringInt[4];
-			IntToString(item, stringInt, sizeof(stringInt));
-			
-			Menu menuVote = CreateMenu(Handler_VoteCallback, MENU_ACTIONS_ALL);
-			
-			menuVote.SetTitle("%s", stringInt);
-			menuVote.AddItem(VOTE_YES, "Yes");
-			menuVote.AddItem(VOTE_NO, "No");
-			menuVote.ExitButton = false;
-			menuVote.DisplayVoteToAll(MENU_TIME_FOREVER);	
-		}	
-	} else if (action == MenuAction_DisplayItem) {
-		getLocalizedMissionName(item, localizedName, sizeof(localizedName), client);		
-		RedrawMenuItem(localizedName);
-	} else if (action == MenuAction_End) {
-		delete menu;
-	}
-	
-	return 0;
-}
-
-public Action Command_MapList(int iClient, int args) {
-	char mapName[LEN_MISSION_NAME];
-	char firstMap[LEN_MAPFILE];
-	char lastMap[LEN_MAPFILE];
-	char localizedName[LEN_MISSION_NAME];
-	for(int iCampaign = 0; iCampaign < getNumberOfCampaign(); iCampaign++) {
-		g_hStrCampaignName.GetString(iCampaign, mapName, sizeof(mapName));
-		g_hStrCampaignFirstMap.GetString(iCampaign, firstMap, sizeof(firstMap));
-		g_hStrCampaignLastMap.GetString(iCampaign, lastMap, sizeof(lastMap));
-		if (getLocalizedMissionName(iCampaign, localizedName, sizeof(localizedName), iClient)) {
-			ReplyToCommand(iClient, "%d.%s(%s) = %s -> %s", iCampaign + 1, localizedName, mapName, firstMap, lastMap);
-		} else {
-			ReplyToCommand(iClient, "%d.%s<Missing localization> = %s -> %s ", iCampaign + 1, mapName, firstMap, lastMap);
-		}
-	}
-
-	return Plugin_Handled;	
 }

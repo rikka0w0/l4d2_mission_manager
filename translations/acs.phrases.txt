@@ -1,0 +1,49 @@
+﻿"Phrases"
+{
+	"Voting for map"
+	{
+		"en"			"Voting for map"
+	}
+	"Announce"
+	{
+		"en"			"Type"
+	}
+	"Announce2"
+	{
+		"en"			"in chat to initiate a vote for the next campaign map"
+	}
+	"Choose a Map"
+	{
+		"en"			"Choose a Map"
+	}
+	"Choose a Mission"
+	{
+		"en"			"Choose a Mission"
+	}
+	"I dont care" {
+		"en"			"I Don't Care"
+	}
+	"All maps" {
+		"en"			"All maps"
+	}
+	"Campaign finished"
+	{
+		"en"			"Campaign finished"
+	}
+	"Switching campaign to"
+	{
+		"en"			"Switching campaign to"
+	}
+	"Switching map to the vote winner"
+	{
+		"en"			"Switching map to the vote winner"
+	}
+	"Map is now winning the vote"
+	{
+		"en"			"is now winning the vote"
+	}
+	"Mission is now winning the vote"
+	{
+		"en"			"is now winning the vote"
+	}	
+}
