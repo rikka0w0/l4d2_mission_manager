@@ -39,6 +39,14 @@ native int LMM_GetMapName(LMM_GAMEMODE gamemode, int missionIndex, int mapIndex,
 	mapName will be converted to lower case internally. Entries in maps.phrases.txt can only have lower case English letters and numbers
 **/
 native int LMM_GetMapLocalizedName(LMM_GAMEMODE gamemode, int missionIndex, int mapIndex, char[] mapName, int length, int client);
+/**
+	Get the unique ID of the map, which contains the information of both missionIndex and mapIndex
+**/
+native int LMM_GetMapUniqueID(LMM_GAMEMODE gamemode, int missionIndex, int mapIndex);
+/**
+	Decode the unique ID of the map, and return both missionIndex and mapIndex
+**/
+native int LMM_DecodeMapUniqueID(LMM_GAMEMODE gamemode, int& missionIndex, int mapUID);
 
 native int LMM_GetNumberOfInvalidMissions();
 native int LMM_GetInvalidMissionName(int missionIndex, char[] mapName, int length);

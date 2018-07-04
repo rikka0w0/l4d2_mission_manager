@@ -111,6 +111,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LMM_FindMapIndexByName", Native_FindMapIndexByName);
 	CreateNative("LMM_GetMapName", Native_GetMapName);
 	CreateNative("LMM_GetMapLocalizedName", Native_GetMapLocalizedName);
+	CreateNative("LMM_GetMapUniqueID", Native_GetMapUniqueID);
+	CreateNative("LMM_DecodeMapUniqueID", Native_DecodeMapUniqueID);	
    
 	CreateNative("LMM_GetNumberOfInvalidMissions", Native_GetNumberOfInvalidMissions);
 	CreateNative("LMM_GetInvalidMissionName", Native_GetInvalidMissionName);
@@ -468,11 +470,11 @@ public int Native_FindMapIndexByName(Handle plugin, int numParams) {
 		return -1;
 	
 	int startMapIndex = 0;
-	for (int endMapIndex=1; endMapIndex<mapList.Length+1; endMapIndex++){
-		int nextStartMapIndex = entryList.Get(endMapIndex);
+	for (int nextMissionIndex=1; nextMissionIndex<mapList.Length+1; nextMissionIndex++){
+		int nextStartMapIndex = entryList.Get(nextMissionIndex);
 		
 		if (startMapIndex <= mapPos && mapPos < nextStartMapIndex) {
-			SetNativeCellRef(2, endMapIndex-1);
+			SetNativeCellRef(2, nextMissionIndex-1);
 			return mapPos - startMapIndex;
 		}
 		
@@ -544,6 +546,58 @@ public int Native_GetMapLocalizedName(Handle plugin, int numParams) {
 			return -1;
 		return 0;
 	}
+}
+
+public int Native_GetMapUniqueID(Handle plugin, int numParams) {
+	if (numParams < 3)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	int missionIndex = GetNativeCell(2);
+	int mapIndex = GetNativeCell(3);
+	
+	if (missionIndex < 0)
+		return -1;
+	
+	ArrayList entryList = LMM_GetEntryList(gamemode);
+	if (entryList == null)
+		return -1;
+		
+	if (missionIndex > entryList.Length - 2)
+		return -1;
+		
+	int offset = entryList.Get(missionIndex);
+	return offset + mapIndex;
+}
+
+public int Native_DecodeMapUniqueID(Handle plugin, int numParams) {
+	if (numParams < 3)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	int mapPos = GetNativeCell(3);
+		
+	ArrayList mapList = LMM_GetMapList(gamemode);
+	if (mapList == null)
+		return -1;
+	
+	ArrayList entryList = LMM_GetEntryList(gamemode);
+	
+	int startMapIndex = 0;
+	for (int nextMissionIndex=1; nextMissionIndex<mapList.Length+1; nextMissionIndex++){
+		int nextStartMapIndex = entryList.Get(nextMissionIndex);
+		
+		if (startMapIndex <= mapPos && mapPos < nextStartMapIndex) {
+			SetNativeCellRef(2, nextMissionIndex-1);
+			return mapPos - startMapIndex;
+		}
+		
+		startMapIndex = nextStartMapIndex;
+	}
+	
+	return -1;
 }
 
 public int Native_GetNumberOfInvalidMissions(Handle plugin, int numParams) {
