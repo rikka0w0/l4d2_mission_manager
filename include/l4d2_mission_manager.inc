@@ -47,6 +47,10 @@ native int LMM_GetMapUniqueID(LMM_GAMEMODE gamemode, int missionIndex, int mapIn
 	Decode the unique ID of the map, and return both missionIndex and mapIndex
 **/
 native int LMM_DecodeMapUniqueID(LMM_GAMEMODE gamemode, int& missionIndex, int mapUID);
+/**
+	Get the number of map unique id, also the number of maps for the given gamemode
+**/
+native int LMM_GetMapUniqueIDCount(LMM_GAMEMODE gamemode);
 
 native int LMM_GetNumberOfInvalidMissions();
 native int LMM_GetInvalidMissionName(int missionIndex, char[] mapName, int length);

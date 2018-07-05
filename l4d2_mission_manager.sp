@@ -113,6 +113,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LMM_GetMapLocalizedName", Native_GetMapLocalizedName);
 	CreateNative("LMM_GetMapUniqueID", Native_GetMapUniqueID);
 	CreateNative("LMM_DecodeMapUniqueID", Native_DecodeMapUniqueID);	
+	CreateNative("LMM_GetMapUniqueIDCount", Native_GetMapUniqueIDCount);
    
 	CreateNative("LMM_GetNumberOfInvalidMissions", Native_GetNumberOfInvalidMissions);
 	CreateNative("LMM_GetInvalidMissionName", Native_GetInvalidMissionName);
@@ -257,47 +258,6 @@ public int Native_GamemodeToString(Handle plugin, int numParams) {
 		return -1;
 		
 	return 0;
-}
-
-public int Native_GamemodeToGID(Handle plugin, int numParams) {
-	if (numParams < 1)
-		return -1;
-	
-	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
-	
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			return 0;
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			return 1;
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			return 2;
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			return 3;
-		}
-	}
-	
-	return -1;
-}
-
-public int Native_GIDToGamemode(Handle plugin, int numParams) {
-	if (numParams < 1)
-		return -1;
-	
-	// Get parameters
-	int gid = GetNativeCell(1);
-	static const LMM_GAMEMODE gamemodes[] = {
-		LMM_GAMEMODE_COOP, LMM_GAMEMODE_VERSUS, LMM_GAMEMODE_SCAVENGE, LMM_GAMEMODE_SURVIVAL
-	};
-	
-	if (gid < 0 || gid > sizeof(gamemodes))
-		return -1;
-		
-	return view_as<int>gamemodes[gid];
 }
 
 /* ========== Mission Parser Outputs ========== */
@@ -598,6 +558,20 @@ public int Native_DecodeMapUniqueID(Handle plugin, int numParams) {
 	}
 	
 	return -1;
+}
+
+public int Native_GetMapUniqueIDCount(Handle plugin, int numParams) {
+	if (numParams < 1)
+		return -1;
+	
+	// Get parameters
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	
+	ArrayList mapList = LMM_GetMapList(gamemode);
+	if (mapList == null)
+		return -1;
+		
+	return mapList.Length;
 }
 
 public int Native_GetNumberOfInvalidMissions(Handle plugin, int numParams) {
