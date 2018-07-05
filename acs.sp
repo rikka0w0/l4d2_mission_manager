@@ -473,7 +473,7 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 				// Browse map list
 			} else {
 				if (IsVoteInProgress()) {
-					ReplyToCommand(client, "[ACS] %t", "Vote in Progress");
+					ReplyToCommand(client, "\x03[ACS]\x04 %t", "Vote in Progress");
 					return 0;
 				}
 			
@@ -573,7 +573,7 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		}
 		
 		if (IsVoteInProgress()) {
-			ReplyToCommand(client, "[ACS] %t", "Vote in Progress");
+			ReplyToCommand(client, "\x03[ACS]\x04 %t", "Vote in Progress");
 			return 0;
 		}
 		
@@ -633,7 +633,7 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 		Format(buffer, sizeof(buffer), "%T", menuName, param1);	// param1 = clientIndex
 	 	RedrawMenuItem(buffer);
 	} else if (action == MenuAction_VoteCancel && param1 == VoteCancel_NoVotes) {
-		PrintToChatAll("[ACS] %t", "No Votes Cast");
+		PrintToChatAll("\x03[ACS]\x04 %t", "No Votes Cast");
 	} else if (action == MenuAction_VoteEnd) {
 		// param1: The chosen item, param2: vote result
 		float percent, limit;
@@ -657,9 +657,9 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 		// A multi-argument vote is "always successful", but have to check if its a Yes/No vote.
 		if (param1 == 1) {
 			LogAction(-1, -1, "Vote failed.");
-			PrintToChatAll("[ACS] %t", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), totalVotes);
+			PrintToChatAll("\x03[ACS]\x04 %t", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), totalVotes);
 		} else {
-			PrintToChatAll("[ACS] %t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
+			PrintToChatAll("\x03[ACS]\x04 %t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
 			
 			char menuInfo[MMC_ITEM_LEN_INFO];
 			menu.GetItem(0, menuInfo, sizeof(menuInfo));
@@ -667,6 +667,7 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 			menu.GetItem(1, menuInfo, sizeof(menuInfo));
 			int mapIndex = StringToInt(menuInfo);
 
+			char colorizedName[LEN_MISSION_NAME];
 			char localizedName[LEN_MISSION_NAME];
 			char mapName[LEN_MAP_FILENAME];
 			if (mapIndex < 0) {
@@ -675,7 +676,8 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMissionLocalizedName(g_iGameMode, missionIndex, localizedName, sizeof(localizedName), client);
-						PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Mission is now winning the vote");
+						Format(colorizedName, sizeof(colorizedName), "\x04%s\x01", localizedName);
+						PrintToChat(client,"\x03[ACS]\x01 %t\x01", "Mission is now winning the vote", colorizedName);
 					}
 				}			
 			} else {
@@ -684,12 +686,14 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-						PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Map is now winning the vote");
+						Format(colorizedName, sizeof(colorizedName), "\x04%s\x01", localizedName);
+						PrintToChat(client,"\x03[ACS]\x01 %t", "Map is now winning the vote", colorizedName);
 					}
 				}
 			}
 			
-			PrintToChatAll("[ACS] %t", "Changing map", mapName);
+			Format(colorizedName, sizeof(colorizedName), "\x04%s\x01", mapName);
+			PrintToChatAll("\x03[ACS]\x01 %t", "Changing map", colorizedName);
 			CreateChangeMapTimer(mapName);
 		}
 	} else if (action == MenuAction_End) {
@@ -840,7 +844,7 @@ void MakeChMapBroadcastTimer() {
 }
 
 public Action Timer_WelcomeMessage(Handle timer, any param) {
-	PrintToChatAll("\x03[ACS]\x01 %t: \x04!chmap\x01 %t.", "Announce", "Announce2");
+	PrintToChatAll("\x03[ACS]\x04 %t", "Change map advertise", "\x05!chmap\x01");
 }
 
 /*======================================================================================
@@ -1093,6 +1097,7 @@ void CheckMapForChange() {
 	char strCurrentMap[LEN_MAP_FILENAME];
 	GetCurrentMap(strCurrentMap,sizeof(strCurrentMap));					//Get the current map from the game
 
+	char colorizedname[LEN_LOCALIZED_NAME];
 	char mapName[LEN_MAP_FILENAME];
 	char localizedName[LEN_LOCALIZED_NAME];
 	for(int cycleIndex = 0; cycleIndex < ACS_GetMissionCount(g_iGameMode); cycleIndex++)	{
@@ -1101,7 +1106,8 @@ void CheckMapForChange() {
 			for (int client = 1; client <= MaxClients; client++) {
 				if (IsClientInGame(client)) {
 					ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
-					PrintToChat(client, "\x03[ACS] \x05 %t: \x04%s", "Campaign finished", localizedName);
+					Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
+					PrintToChat(client, "\x03[ACS]\x05 %t", "Campaign finished", colorizedname);
 				}
 			}
 			
@@ -1112,7 +1118,8 @@ void CheckMapForChange() {
 					for (int client = 1; client <= MaxClients; client++) {
 						if (IsClientInGame(client)) {
 							ACS_GetLocalizedMissionName(g_iGameMode, g_iWinningMapIndex, client, localizedName, sizeof(localizedName));
-							PrintToChat(client, "\x03[ACS] \x05 %t: \x04%s", "Switching map to the vote winner", localizedName);
+							Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
+							PrintToChat(client, "\x03[ACS]\x05 %t", "Switching to the vote winner", colorizedname);
 						}
 					}
 					
@@ -1136,7 +1143,8 @@ void CheckMapForChange() {
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
-						PrintToChat(client, "\x03[ACS] \x05 %t: \x04%s", "Switching campaign to", localizedName);
+						Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
+						PrintToChat(client, "\x03[ACS]\x05 %t", "Switching campaign to", colorizedname);
 					}
 				}
 				
@@ -1153,6 +1161,7 @@ void CheckMapForChange() {
 //Change to the next scavenge map
 ChangeScavengeMap() {
 	char mapName[LEN_MAP_FILENAME];
+	char colorizedname[LEN_LOCALIZED_NAME];
 	char localizedName[LEN_LOCALIZED_NAME];
 	int cycleCount = ACS_GetMissionCount(g_iGameMode);
 
@@ -1165,7 +1174,8 @@ ChangeScavengeMap() {
 			for (int client = 1; client <= MaxClients; client++) {
 				if (IsClientInGame(client)) {
 					LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-					PrintToChat(client, "\x03[ACS] \x05 %t: \x04%s", "Switching map to the vote winner", localizedName);
+					Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
+					PrintToChat(client, "\x03[ACS]\x05 %t", "Switching to the vote winner", colorizedname);
 				}
 			}
 			
@@ -1212,7 +1222,8 @@ ChangeScavengeMap() {
 					for (int client = 1; client <= MaxClients; client++) {
 						if (IsClientInGame(client)) {
 							LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-							PrintToChatAll("\x03[ACS] \x05 %t: \x04%s", "Switching campaign to", localizedName);
+							Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
+							PrintToChat(client, "\x03[ACS]\x05 %t", "Switching map to", colorizedname);
 						}
 					}	
 
@@ -1244,6 +1255,7 @@ public Action Timer_AdvertiseNextMap(Handle timer, any param) {
 // Display nothing if not on the last map
 DisplayNextMapToAll() {
 	char localizedName[LEN_MISSION_NAME];
+	char colorizedName[LEN_MISSION_NAME];
 	
 	//If there is a winner to the vote display the winner if not display the next map in rotation
 	if(g_iWinningMapIndex >= 0) {
@@ -1255,14 +1267,14 @@ DisplayNextMapToAll() {
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-						PrintHintText(client,"The next map is currently %s", localizedName);
+						PrintHintText(client, "%t", "The next map is currently", localizedName);
 					}
 				}
 			} else {
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMissionLocalizedName(g_iGameMode, g_iWinningMapIndex, localizedName, sizeof(localizedName), client);
-						PrintHintText(client, "The next campaign is currently %s", localizedName);
+						PrintHintText(client, "%t", "The next campaign is currently", localizedName);
 					}
 				}
 			}
@@ -1274,14 +1286,16 @@ DisplayNextMapToAll() {
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-						PrintToChat(client,"\x03[ACS] \x05The next map is currently \x04%s", localizedName);
+						Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+						PrintToChat(client, "\x03[ACS]\x05 %t", "The next map is currently", colorizedName);
 					}
 				}
 			} else {
 				for (int client = 1; client <= MaxClients; client++) {
 					if (IsClientInGame(client)) {
 						LMM_GetMissionLocalizedName(g_iGameMode, g_iWinningMapIndex, localizedName, sizeof(localizedName), client);
-						PrintToChat(client, "\x03[ACS] \x05The next campaign is currently \x04%s", localizedName);
+						Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+						PrintToChat(client, "\x03[ACS]\x05 %t", "The next campaign is currently", colorizedName);
 					}
 				}
 			}
@@ -1322,9 +1336,11 @@ DisplayNextMapToAll() {
 								
 								//Display the next map in the rotation in the appropriate way
 								if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_HINT)
-									PrintHintText(client, "The next map is currently %s", localizedName);
-								else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT)
-									PrintToChat(client, "\x03[ACS] \x05The next map is currently \x04%s", localizedName);
+									PrintHintText(client, "%t", "The next map is currently", localizedName);
+								else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT) {
+									Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+									PrintToChat(client, "\x03[ACS]\x05 %t", "The next map is currently", colorizedName);
+								}
 							}
 						}
 						
@@ -1350,9 +1366,11 @@ DisplayNextMapToAll() {
 							ACS_GetLocalizedMissionName(g_iGameMode, cycleIndex, client, localizedName, sizeof(localizedName));
 							
 							if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_HINT)
-								PrintHintText(client, "The next campaign is currently %s", localizedName);
-							else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT)
-								PrintToChat(client, "\x03[ACS] \x05The next campaign is currently \x04%s", localizedName);
+								PrintHintText(client, "%t", "The next campaign is currently", localizedName);
+							else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT) {
+								Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+								PrintToChat(client, "\x03[ACS]\x05 %t", "The next campaign is currently", colorizedName);
+							}
 						}
 					}
 					return;
@@ -1375,12 +1393,12 @@ DisplayNextMapToAll() {
 //Command that a player can use to vote/revote for a map/campaign
 public Action MapVote(int iClient, int args) {
 	if(!g_hCVar_VotingEnabled.BoolValue) {
-		PrintToChat(iClient, "\x03[ACS] \x05Voting has been disabled on this server.");
+		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
 		return;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
-		PrintToChat(iClient, "\x03[ACS] \x05Voting is only enabled on a Scavenge or finale map.");
+		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
 		return;
 	}
 	
@@ -1394,30 +1412,33 @@ public Action MapVote(int iClient, int args) {
 //Command that a player can use to see the total votes for all maps/campaigns
 public Action DisplayCurrentVotes(int iClient, int args) {
 	char localizedName[LEN_MISSION_NAME];
+	char colorizedName[LEN_MISSION_NAME];
 	if(!g_hCVar_VotingEnabled.BoolValue) {
-		ReplyToCommand(iClient, "\x03[ACS] \x05Voting has been disabled on this server.");
+		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
 		return;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
-		ReplyToCommand(iClient, "\x03[ACS] \x05Voting is only enabled on a Scavenge or finale map.");
+		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
 		return;
 	}
 			
 	//Display to the client the current winning map
-	if(g_iWinningMapIndex > 0) {
+	if(g_iWinningMapIndex >= 0) {
 		//Show message to all the players of the new vote winner
 		if(g_iGameMode == GAMEMODE_SCAVENGE) {
 			int missionIndex;
 			int mapIndex = LMM_DecodeMapUniqueID(g_iGameMode, missionIndex, g_iWinningMapIndex);
 			LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), iClient);
-			ReplyToCommand(iClient,"\x03[ACS] \x04%s \x05%t.", localizedName, "Map is now winning the vote");
+			Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+			ReplyToCommand(iClient,"\x03[ACS]\x05 %t", "Map is now winning the vote", colorizedName);	
 		} else {
 			LMM_GetMissionLocalizedName(g_iGameMode, g_iWinningMapIndex, localizedName, sizeof(localizedName), iClient);
-			ReplyToCommand(iClient,"\x03[ACS] \x04%s \x05%t.", localizedName, "Mission is now winning the vote");
+			Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+			ReplyToCommand(iClient,"\x03[ACS]\x05 %t", "Mission is now winning the vote", colorizedName);
 		}
 	} else {
-		ReplyToCommand(iClient, "\x03[ACS] \x05No one has voted yet.");	
+		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "No one has voted yet");	
 	}
 
 
@@ -1446,10 +1467,10 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 				int missionIndex;
 				int mapIndex = LMM_DecodeMapUniqueID(g_iGameMode, missionIndex, iOption);
 				LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), iClient);
-				ReplyToCommand(iClient, "\x04          %s: \x05%d votes", localizedName, iMapVotes[iOption]);
+				ReplyToCommand(iClient, "\x04          %s: \x05%d %t", localizedName, iMapVotes[iOption], "Votes");
 			} else {
 				LMM_GetMissionLocalizedName(g_iGameMode, iOption, localizedName, sizeof(localizedName), iClient);
-				ReplyToCommand(iClient, "\x04          %s: \x05%d votes", localizedName, iMapVotes[iOption]);
+				ReplyToCommand(iClient, "\x04          %s: \x05%d %t", localizedName, iMapVotes[iOption], "Votes");
 			}
 				
 		}
@@ -1472,8 +1493,8 @@ public Action Timer_DisplayVoteAdToAll(Handle hTimer, any iData) {
 		){
 			switch(g_hCVar_VotingAdMode.IntValue) {
 				case DISPLAY_MODE_MENU: VoteMenuDraw(iClient);
-				case DISPLAY_MODE_HINT: PrintHintText(iClient, "To vote for the next map, type: !mapvote\nTo see all the votes, type: !mapvotes");
-				case DISPLAY_MODE_CHAT: PrintToChat(iClient, "\x03[ACS] \x05To vote for the next map, type: \x04!mapvote\n           \x05To see all the votes, type: \x04!mapvotes");
+				case DISPLAY_MODE_HINT: PrintHintText(iClient, "%t", "Map vote advertise", "!mapvote", "!mapvotes");
+				case DISPLAY_MODE_CHAT: PrintToChat(iClient, "\x03[ACS]\x05 %t", "Map vote advertise", "\x04!mapvote\x05", "\x04!mapvotes\x05");
 			}
 			
 			g_bClientShownVoteAd[iClient] = true;
@@ -1520,13 +1541,13 @@ public VoteMenuHandler(int iClient, bool dontCare, int missionIndex, int mapInde
 	//Display the appropriate message to the voter
 	char localizedName[LEN_MISSION_NAME];
 	if(dontCare) {
-		PrintHintText(iClient, "You did not vote.\nTo vote, type: !mapvote");
+		PrintHintText(iClient, "%t", "You did not vote", "!mapvote");
 	} else if(g_iGameMode == GAMEMODE_SCAVENGE) {
 		LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), iClient);
-		PrintHintText(iClient, "You voted for %s.\n- To change your vote, type: !mapvote\n- To see all the votes, type: !mapvotes", localizedName);
+		PrintHintText(iClient, "%t", "You voted for", "!mapvote", "!mapvotes", localizedName);
 	} else {
 		LMM_GetMissionLocalizedName(g_iGameMode, missionIndex, localizedName, sizeof(localizedName), iClient);
-		PrintHintText(iClient, "You voted for %s.\n- To change your vote, type: !mapvote\n- To see all the votes, type: !mapvotes", localizedName);
+		PrintHintText(iClient, "%t", "You voted for", "!mapvote", "!mapvotes", localizedName);
 	}
 }
 
@@ -1604,6 +1625,7 @@ void SetTheCurrentVoteWinner() {
 					EmitSoundToClient(iPlayer, SOUND_NEW_VOTE_WINNER);
 		
 		char localizedName[LEN_MISSION_NAME];
+		char colorizedName[LEN_MISSION_NAME];
 		//Show message to all the players of the new vote winner
 		if(g_iGameMode == GAMEMODE_SCAVENGE) {
 			int missionIndex;
@@ -1612,14 +1634,16 @@ void SetTheCurrentVoteWinner() {
 			for (int client = 1; client <= MaxClients; client++) {
 				if (IsClientInGame(client)) {
 					LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
-					PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Map is now winning the vote");
+					Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+					PrintToChat(client,"\x03[ACS]\x05 %t\x05", "Map is now winning the vote", colorizedName);
 				}
 			}
 		} else {
 			for (int client = 1; client <= MaxClients; client++) {
 				if (IsClientInGame(client)) {
 					LMM_GetMissionLocalizedName(g_iGameMode, g_iWinningMapIndex, localizedName, sizeof(localizedName), client);
-					PrintToChat(client,"\x03[ACS] \x04%s \x05%t.", localizedName, "Mission is now winning the vote");
+					Format(colorizedName, sizeof(colorizedName), "\x04%s\x05", localizedName);
+					PrintToChat(client,"\x03[ACS]\x05 %t\x05", "Mission is now winning the vote", colorizedName);
 				}
 			}
 		}
