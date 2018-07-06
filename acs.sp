@@ -55,11 +55,12 @@
 
 ===================================================================================================*/
 
-#pragma semicolon 1
-
 #include <sourcemod>
 #include <sdktools>
 #include <l4d2_mission_manager>
+
+#pragma semicolon 1
+#pragma newdecls required
 
 #define PLUGIN_VERSION	"v1.9.0"
 
@@ -136,16 +137,16 @@ void ACS_FreeLists() {
 }
 
 ArrayList ACS_GetMissionIndexList(LMM_GAMEMODE gamemode) {
-	return g_hInt_MapIndexes[view_as<int> gamemode];
+	return g_hInt_MapIndexes[view_as<int>(gamemode)];
 }
 
 void ACS_SetCyclingCount(LMM_GAMEMODE gamemode, int count) {
-	g_int_CyclingCount[view_as<int>gamemode] = count;
+	g_int_CyclingCount[view_as<int>(gamemode)] = count;
 }
 
 // Used by the ACS
 int ACS_GetCycledMissionCount(LMM_GAMEMODE gamemode) {
-	return g_int_CyclingCount[view_as<int>gamemode];
+	return g_int_CyclingCount[view_as<int>(gamemode)];
 }
 
 int ACS_GetMissionCount(LMM_GAMEMODE gamemode){
@@ -596,7 +597,8 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 }
 
 bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
-	Menu menuVote = CreateMenu(ChampVoteHandler, MENU_ACTIONS_ALL);
+	Menu menuVote = CreateMenu(ChampVoteHandler, 
+						MenuAction_Display|MenuAction_DisplayItem|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
 	
 	menuVote.SetTitle("To be translated");
 	char menuInfo[MMC_ITEM_LEN_INFO];
@@ -767,7 +769,7 @@ public Plugin myinfo = {
 #################             O N   P L U G I N   S T A R T            #################
 ======================================================================================*/
 
-public OnPluginStart() {
+public void OnPluginStart() {
 	LoadTranslations("acs.phrases");
 	LoadTranslations("common.phrases");
 	LoadTranslations("basevotes.phrases");
@@ -779,14 +781,14 @@ public OnPluginStart() {
 	}
 	
 	//Create custom console variables
-	CreateConVar("acs_version", PLUGIN_VERSION, "Version of Automatic Campaign Switcher (ACS) on this server", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	g_hCVar_VotingEnabled = CreateConVar("acs_voting_system_enabled", "1", "Enables players to vote for the next map or campaign [0 = DISABLED, 1 = ENABLED]", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	g_hCVar_VoteWinnerSoundEnabled = CreateConVar("acs_voting_sound_enabled", "1", "Determines if a sound plays when a new map is winning the vote [0 = DISABLED, 1 = ENABLED]", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	g_hCVar_VotingAdMode = CreateConVar("acs_voting_ad_mode", "3", "Sets how to advertise voting at the start of the map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT, 3 = OPEN VOTE MENU]\n * Note: This is only displayed once during a finale or scavenge map *", FCVAR_PLUGIN, true, 0.0, true, 3.0);
-	g_hCVar_VotingAdDelayTime = CreateConVar("acs_voting_ad_delay_time", "10.0", "Time, in seconds, to wait after survivors leave the start area to advertise voting as defined in acs_voting_ad_mode\n * Note: If the server is up, changing this in the .cfg file takes two map changes before the change takes place *", FCVAR_PLUGIN, true, 0.1, false);
-	g_hCVar_NextMapAdMode = CreateConVar("acs_next_map_ad_mode", "2", "Sets how the next campaign/map is advertised during a finale or scavenge map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT]", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	g_hCVar_NextMapAdInterval = CreateConVar("acs_next_map_ad_interval", "60.0", "The time, in seconds, between advertisements for the next campaign/map on finales and scavenge maps", FCVAR_PLUGIN, true, 60.0, false);
-	g_hCVar_MaxFinaleFailures = CreateConVar("acs_max_coop_finale_failures", "0", "The amount of times the survivors can fail a finale in Coop before it switches to the next campaign [0 = INFINITE FAILURES]", FCVAR_PLUGIN, true, 0.0, false);
+	CreateConVar("acs_version", PLUGIN_VERSION, "Version of Automatic Campaign Switcher (ACS) on this server", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	g_hCVar_VotingEnabled = CreateConVar("acs_voting_system_enabled", "1", "Enables players to vote for the next map or campaign [0 = DISABLED, 1 = ENABLED]", _, true, 0.0, true, 1.0);
+	g_hCVar_VoteWinnerSoundEnabled = CreateConVar("acs_voting_sound_enabled", "1", "Determines if a sound plays when a new map is winning the vote [0 = DISABLED, 1 = ENABLED]", _, true, 0.0, true, 1.0);
+	g_hCVar_VotingAdMode = CreateConVar("acs_voting_ad_mode", "3", "Sets how to advertise voting at the start of the map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT, 3 = OPEN VOTE MENU]\n * Note: This is only displayed once during a finale or scavenge map *", _, true, 0.0, true, 3.0);
+	g_hCVar_VotingAdDelayTime = CreateConVar("acs_voting_ad_delay_time", "10.0", "Time, in seconds, to wait after survivors leave the start area to advertise voting as defined in acs_voting_ad_mode\n * Note: If the server is up, changing this in the .cfg file takes two map changes before the change takes place *", _, true, 0.1, false);
+	g_hCVar_NextMapAdMode = CreateConVar("acs_next_map_ad_mode", "2", "Sets how the next campaign/map is advertised during a finale or scavenge map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT]", _, true, 0.0, true, 2.0);
+	g_hCVar_NextMapAdInterval = CreateConVar("acs_next_map_ad_interval", "60.0", "The time, in seconds, between advertisements for the next campaign/map on finales and scavenge maps", _, true, 60.0, false);
+	g_hCVar_MaxFinaleFailures = CreateConVar("acs_max_coop_finale_failures", "0", "The amount of times the survivors can fail a finale in Coop before it switches to the next campaign [0 = INFINITE FAILURES]", _, true, 0.0, false);
 	g_hCVar_ChMapBroadcastInterval =  CreateConVar("acs_chmap_broadcast_interval", "180.0", "controls the frequency of the \"!chmap\" advertisement, in second.");	
 	
 	//Hook console variable changes
@@ -852,7 +854,7 @@ public Action Timer_WelcomeMessage(Handle timer, any param) {
 /*======================================================================================
 ##########           C V A R   C A L L B A C K   F U N C T I O N S           ###########
 ======================================================================================*/
-public CVarChange_ChMapBroadcast(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_ChMapBroadcast(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	MakeChMapBroadcastTimer();
 }
 
@@ -938,7 +940,7 @@ public void CVarChange_VotingAdDelayTime(Handle hCVar, const char[] strOldValue,
 }
 
 //Callback function for how ACS and the next map is advertised to the players during a finale
-public CVarChange_NewMapAdMode(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_NewMapAdMode(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
 	if(StrEqual(strOldValue, strNewValue, false))
 		return;
@@ -961,7 +963,7 @@ public CVarChange_NewMapAdMode(Handle hCVar, const char[] strOldValue, const cha
 }
 
 //Callback function for the interval that controls the timer that advertises ACS and the next map
-public CVarChange_NewMapAdInterval(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_NewMapAdInterval(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
 	if(StrEqual(strOldValue, strNewValue, false))
 		return;
@@ -980,7 +982,7 @@ public CVarChange_NewMapAdInterval(Handle hCVar, const char[] strOldValue, const
 }
 
 //Callback function for the amount of times the survivors can fail a coop finale map before ACS switches
-public CVarChange_MaxFinaleFailures(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_MaxFinaleFailures(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
 	//If the value was not changed, then do nothing
 	if(StrEqual(strOldValue, strNewValue, false))
 		return;
@@ -1001,7 +1003,7 @@ public CVarChange_MaxFinaleFailures(Handle hCVar, const char[] strOldValue, cons
 #################                     E V E N T S                      #################
 ======================================================================================*/
 
-public OnMapStart() {	
+public void OnMapStart() {	
 	//Set the game mode
 	g_iGameMode = LMM_GetCurrentGameMode();
 	
@@ -1162,7 +1164,7 @@ void CheckMapForChange() {
 }
 
 //Change to the next scavenge map
-ChangeScavengeMap() {
+void ChangeScavengeMap() {
 	char mapName[LEN_MAP_FILENAME];
 	char colorizedname[LEN_LOCALIZED_NAME];
 	char localizedName[LEN_LOCALIZED_NAME];
@@ -1256,7 +1258,7 @@ public Action Timer_AdvertiseNextMap(Handle timer, any param) {
 }
 
 // Display nothing if not on the last map
-DisplayNextMapToAll() {
+void DisplayNextMapToAll() {
 	char localizedName[LEN_MISSION_NAME];
 	char colorizedName[LEN_MISSION_NAME];
 	
@@ -1524,7 +1526,7 @@ public void VoteMenuDraw(int iClient) {
 }
 
 //Handle the menu selection the client chose for voting
-public VoteMenuHandler(int iClient, bool dontCare, int missionIndex, int mapIndex) {
+public void VoteMenuHandler(int iClient, bool dontCare, int missionIndex, int mapIndex) {
 	g_bClientVoted[iClient] = true;
 	
 	//Set the players current vote

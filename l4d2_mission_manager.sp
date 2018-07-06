@@ -1,8 +1,9 @@
-#pragma semicolon 1
-
 #include <sourcemod>
 #include <sdktools>
 #include <l4d2_mission_manager>
+
+#pragma semicolon 1
+#pragma newdecls required
 
 public Plugin myinfo = {
 	name = "L4D2 Mission Manager",
@@ -40,7 +41,7 @@ public void OnPluginEnd() {
 public Action Command_List(int iClient, int args) {
 	if (args < 1) {
 		for (int i=0; i<4; i++) {
-			LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>i;
+			LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(i);
 			DumpMissionInfo(iClient, gamemode);
 		}
 	} else {
@@ -201,7 +202,7 @@ public int Native_GetCurrentGameMode(Handle plugin, int numParams) {
 	else
 		gamemode = LMM_GAMEMODE_UNKNOWN;
 		
-	return view_as<int>gamemode;
+	return view_as<int>(gamemode);
 }
 
 public int Native_StringToGamemode(Handle plugin, int numParams) {
@@ -215,16 +216,16 @@ public int Native_StringToGamemode(Handle plugin, int numParams) {
 	GetNativeString(1, gamemodeName, length+1);
 	
 	if(StrEqual("coop", gamemodeName, false)) {
-		return view_as<int>LMM_GAMEMODE_COOP;
+		return view_as<int>(LMM_GAMEMODE_COOP);
 	} else if (StrEqual("versus", gamemodeName, false)) {
-		return view_as<int>LMM_GAMEMODE_VERSUS;
+		return view_as<int>(LMM_GAMEMODE_VERSUS);
 	} else if(StrEqual("scavenge", gamemodeName, false)) {
-		return view_as<int>LMM_GAMEMODE_SCAVENGE;
+		return view_as<int>(LMM_GAMEMODE_SCAVENGE);
 	} else if (StrEqual("survival", gamemodeName, false)) {
-		return view_as<int>LMM_GAMEMODE_SURVIVAL;
+		return view_as<int>(LMM_GAMEMODE_SURVIVAL);
 	}
 	
-	return view_as<int>LMM_GAMEMODE_UNKNOWN;
+	return view_as<int>(LMM_GAMEMODE_UNKNOWN);
 }
 
 public int Native_GamemodeToString(Handle plugin, int numParams) {
@@ -232,7 +233,7 @@ public int Native_GamemodeToString(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int length = GetNativeCell(3);
 	char gamemodeName[LEN_GAMEMODE_NAME];
 
@@ -289,15 +290,15 @@ void LMM_FreeLists() {
 }
 
 ArrayList LMM_GetMissionNameList(LMM_GAMEMODE gamemode) {
-	return g_hStr_MissionNames[view_as<int>gamemode];
+	return g_hStr_MissionNames[view_as<int>(gamemode)];
 }
 
 ArrayList LMM_GetEntryList(LMM_GAMEMODE gamemode) {
-	return g_hInt_Entries[view_as<int>gamemode];
+	return g_hInt_Entries[view_as<int>(gamemode)];
 }
 
 ArrayList LMM_GetMapList(LMM_GAMEMODE gamemode) {
-	return g_hStr_Maps[view_as<int>gamemode];
+	return g_hStr_Maps[view_as<int>(gamemode)];
 }
 
 public int Native_GetNumberOfMissions(Handle plugin, int numParams) {
@@ -316,7 +317,7 @@ public int Native_FindMissionIndexByName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int length;
 	GetNativeStringLength(2, length);
 	char[] missionName = new char[length+1];
@@ -334,7 +335,7 @@ public int Native_GetMissionName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	int length = GetNativeCell(4);
 	
@@ -357,7 +358,7 @@ public int Native_GetMissionLocalizedName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	int length = GetNativeCell(4);
 	int client = GetNativeCell(5);
@@ -389,7 +390,7 @@ public int Native_GetNumberOfMaps(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	
 	ArrayList entryList = LMM_GetEntryList(gamemode);
@@ -410,7 +411,7 @@ public int Native_FindMapIndexByName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int length;
 	GetNativeStringLength(3, length);
 	char[] mapName = new char[length+1];
@@ -449,7 +450,7 @@ public int Native_GetMapName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	int mapIndex = GetNativeCell(3);
 	int length = GetNativeCell(5);
@@ -478,7 +479,7 @@ public int Native_GetMapLocalizedName(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	int mapIndex = GetNativeCell(3);
 	int length = GetNativeCell(5);
@@ -513,7 +514,7 @@ public int Native_GetMapUniqueID(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int missionIndex = GetNativeCell(2);
 	int mapIndex = GetNativeCell(3);
 	
@@ -536,7 +537,7 @@ public int Native_DecodeMapUniqueID(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	int mapPos = GetNativeCell(3);
 		
 	ArrayList mapList = LMM_GetMapList(gamemode);
@@ -565,7 +566,7 @@ public int Native_GetMapUniqueIDCount(Handle plugin, int numParams) {
 		return -1;
 	
 	// Get parameters
-	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>GetNativeCell(1);
+	LMM_GAMEMODE gamemode = view_as<LMM_GAMEMODE>(GetNativeCell(1));
 	
 	ArrayList mapList = LMM_GetMapList(gamemode);
 	if (mapList == null)
@@ -890,8 +891,8 @@ void LMM_NewLocalizedList(LMM_GAMEMODE gamemode) {
 	ArrayList missionLocalizedList = new ArrayList(1, LMM_GetNumberOfMissions(gamemode));
 	ArrayList mapLocalizedList = new ArrayList(1, LMM_GetMapList(gamemode).Length);
 	
-	g_hBool_MissionNameLocalized[view_as<int>gamemode] = missionLocalizedList;
-	g_hBool_MapNameLocalized[view_as<int>gamemode] = mapLocalizedList;
+	g_hBool_MissionNameLocalized[view_as<int>(gamemode)] = missionLocalizedList;
+	g_hBool_MapNameLocalized[view_as<int>(gamemode)] = mapLocalizedList;
 	
 	for (int i=0; i<missionLocalizedList.Length; i++) {
 		missionLocalizedList.Set(i, 0, 0);
@@ -910,11 +911,11 @@ void LMM_FreeLocalizedLists() {
 }
 
 ArrayList LMM_GetMissionLocalizedList(LMM_GAMEMODE gamemode) {
-	return g_hBool_MissionNameLocalized[view_as<int>gamemode];
+	return g_hBool_MissionNameLocalized[view_as<int>(gamemode)];
 }
 
 ArrayList LMM_GetMapLocalizedList(LMM_GAMEMODE gamemode) {
-	return g_hBool_MapNameLocalized[view_as<int>gamemode];
+	return g_hBool_MapNameLocalized[view_as<int>(gamemode)];
 }
 /*================================================================
 #########       Mission Name Localization Parsing        #########
