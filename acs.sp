@@ -110,8 +110,9 @@ ConVar g_hCVar_NextMapAdMode;			//The way to advertise the next map
 ConVar g_hCVar_NextMapAdInterval;		//Interval for ACS next map advertisement
 ConVar g_hCVar_MaxFinaleFailures;		//Amount of times Survivors can fail before ACS switches in coop
 ConVar g_hCVar_ChMapBroadcastInterval;	//The interval for advertising "!chmap"
+ConVar g_hCVar_PreventEmptyServer;		//If enabled, the server automatically switch to the first available official map when no one is playing a 3-rd map
 
-Handle g_hTimer_Broadcast;
+Handle g_hTimer_ChMapBroadcast;
 
 /*=========================================================
 #########       Mission Cycle Data Storage        #########
@@ -152,7 +153,6 @@ int ACS_GetCycledMissionCount(LMM_GAMEMODE gamemode) {
 int ACS_GetMissionCount(LMM_GAMEMODE gamemode){
 	return ACS_GetMissionIndexList(gamemode).Length;
 }
-
 
 int ACS_GetMissionIndex(LMM_GAMEMODE gamemode, int cycleIndex) {
 	ArrayList missionIndexList = ACS_GetMissionIndexList(gamemode);
@@ -789,7 +789,8 @@ public void OnPluginStart() {
 	g_hCVar_NextMapAdMode = CreateConVar("acs_next_map_ad_mode", "2", "Sets how the next campaign/map is advertised during a finale or scavenge map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT]", _, true, 0.0, true, 2.0);
 	g_hCVar_NextMapAdInterval = CreateConVar("acs_next_map_ad_interval", "60.0", "The time, in seconds, between advertisements for the next campaign/map on finales and scavenge maps", _, true, 60.0, false);
 	g_hCVar_MaxFinaleFailures = CreateConVar("acs_max_coop_finale_failures", "0", "The amount of times the survivors can fail a finale in Coop before it switches to the next campaign [0 = INFINITE FAILURES]", _, true, 0.0, false);
-	g_hCVar_ChMapBroadcastInterval =  CreateConVar("acs_chmap_broadcast_interval", "180.0", "controls the frequency of the \"!chmap\" advertisement, in second.");	
+	g_hCVar_ChMapBroadcastInterval =  CreateConVar("acs_chmap_broadcast_interval", "180.0", "Controls the frequency of the \"!chmap\" advertisement, in second.");	
+	g_hCVar_PreventEmptyServer =  CreateConVar("acs_prevent_empty_server", "1", "If enabled, the server automatically switch to the first available official map when no one is playing a 3-rd map [0 = DISABLED, 1 = ENABLED]", _, true, 0.0, true, 1.0);	
 	
 	//Hook console variable changes
 	HookConVarChange(g_hCVar_VotingEnabled, CVarChange_Voting);
@@ -799,7 +800,8 @@ public void OnPluginStart() {
 	HookConVarChange(g_hCVar_NextMapAdMode, CVarChange_NewMapAdMode);
 	HookConVarChange(g_hCVar_NextMapAdInterval, CVarChange_NewMapAdInterval);
 	HookConVarChange(g_hCVar_MaxFinaleFailures, CVarChange_MaxFinaleFailures);
-	HookConVarChange(g_hCVar_ChMapBroadcastInterval, CVarChange_ChMapBroadcast);
+	HookConVarChange(g_hCVar_ChMapBroadcastInterval, CVarChange_ChMapBroadcastInterval);
+	HookConVarChange(g_hCVar_PreventEmptyServer, CVarChange_PreventEmptyServer);
 	
 	AutoExecConfig(true, "acs");
 	
@@ -835,16 +837,20 @@ public Action Command_ChangeMapVote2(int iClient, int args) {
 
 public void OnConfigsExecuted() {
 	MakeChMapBroadcastTimer();
+
+	//Display advertising for the next campaign or map
+	if(g_hCVar_NextMapAdMode.IntValue != DISPLAY_MODE_DISABLED)
+		 CreateTimer(g_hCVar_NextMapAdInterval.FloatValue, Timer_AdvertiseNextMap, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void MakeChMapBroadcastTimer() {
-	if (g_hTimer_Broadcast != null) {
-		KillTimer(g_hTimer_Broadcast);
-		g_hTimer_Broadcast = null;
+	if (g_hTimer_ChMapBroadcast != null) {
+		KillTimer(g_hTimer_ChMapBroadcast);
+		g_hTimer_ChMapBroadcast = null;
 	}
-
+	
 	if(g_hCVar_ChMapBroadcastInterval.FloatValue > 0)
-		g_hTimer_Broadcast = CreateTimer(g_hCVar_ChMapBroadcastInterval.FloatValue, Timer_WelcomeMessage, INVALID_HANDLE, TIMER_REPEAT);
+		g_hTimer_ChMapBroadcast = CreateTimer(g_hCVar_ChMapBroadcastInterval.FloatValue, Timer_WelcomeMessage, INVALID_HANDLE, TIMER_REPEAT);
 }
 
 public Action Timer_WelcomeMessage(Handle timer, any param) {
@@ -854,7 +860,19 @@ public Action Timer_WelcomeMessage(Handle timer, any param) {
 /*======================================================================================
 ##########           C V A R   C A L L B A C K   F U N C T I O N S           ###########
 ======================================================================================*/
-public void CVarChange_ChMapBroadcast(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+public void CVarChange_PreventEmptyServer(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+	//If the value was not changed, then do nothing
+	if(StrEqual(strOldValue, strNewValue, false))
+		return;
+
+	CheckEmptyServer();
+}
+
+public void CVarChange_ChMapBroadcastInterval(Handle hCVar, const char[] strOldValue, const char[] strNewValue) {
+	//If the value was not changed, then do nothing
+	if(StrEqual(strOldValue, strNewValue, false))
+		return;
+
 	MakeChMapBroadcastTimer();
 }
 
@@ -944,7 +962,7 @@ public void CVarChange_NewMapAdMode(Handle hCVar, const char[] strOldValue, cons
 	//If the value was not changed, then do nothing
 	if(StrEqual(strOldValue, strNewValue, false))
 		return;
-	
+		
 	//If the value was changed, then set it and display a message to the server and players
 	switch(StringToInt(strNewValue)) {
 		case 0:	{
@@ -1011,11 +1029,6 @@ public void OnMapStart() {
 	PrecacheSound(SOUND_NEW_VOTE_START);
 	PrecacheSound(SOUND_NEW_VOTE_WINNER);
 	
-	
-	//Display advertising for the next campaign or map
-	if(g_hCVar_NextMapAdMode.IntValue != DISPLAY_MODE_DISABLED)
-		CreateTimer(g_hCVar_NextMapAdInterval.FloatValue, Timer_AdvertiseNextMap, _, TIMER_FLAG_NO_MAPCHANGE);
-	
 	g_iRoundEndCounter = 0;			//Reset the round end counter on every map start
 	g_iCoopFinaleFailureCount = 0;	//Reset the amount of Survivor failures
 	g_bFinaleWon = false;			//Reset the finale won variable
@@ -1080,13 +1093,15 @@ public Action Event_PlayerDisconnect(Handle hEvent, const char[] strName, bool b
 	
 	if(iClient	< 1)
 		return Plugin_Continue;
-	
+		
 	//Reset the client's votes
 	g_bClientVoted[iClient] = false;
 	g_iClientVote[iClient] = -1;
 	
 	//Check to see if there is a new vote winner
 	SetTheCurrentVoteWinner();
+	
+	CheckEmptyServer();
 	
 	return Plugin_Continue;
 }
@@ -1095,6 +1110,26 @@ public Action Event_PlayerDisconnect(Handle hEvent, const char[] strName, bool b
 /*======================================================================================
 #################             A C S   C H A N G E   M A P              #################
 ======================================================================================*/
+void CheckEmptyServer() {
+	if (!g_hCVar_PreventEmptyServer.BoolValue)
+		return;	// Feature disabled
+
+	char mapName[LEN_MAP_FILENAME];
+	GetCurrentMap(mapName,sizeof(mapName));					//Get the current map from the game
+	
+	int missionIndex;
+	LMM_FindMapIndexByName(g_iGameMode, missionIndex, mapName);
+	
+	for (int cycleIndex=0; cycleIndex<ACS_GetCycledMissionCount(g_iGameMode); cycleIndex++) {
+		if (ACS_GetMissionIndex(g_iGameMode, cycleIndex) == missionIndex)
+			return;	// Current map/mission is in cycle
+	}
+	
+	// Current map/mission is not in cycle
+	ACS_GetFirstMapName(g_iGameMode, 0, mapName, sizeof(mapName));
+	PrintToServer("Empty server is running 3-rd map, switching to the first official map!");
+	ForceChangeLevel(mapName, "Empty server with 3-rd map");
+}
 
 //Check to see if the current map is a finale, and if so, switch to the next campaign
 void CheckMapForChange() {
