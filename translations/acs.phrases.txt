@@ -17,7 +17,7 @@
 	}
 	"Choose a Mission"
 	{
-		"en"			"Choose a Mission"
+		"en"			"Choose a Campaign"
 	}
 	"I dont care" {
 		"en"			"I Don't Care"

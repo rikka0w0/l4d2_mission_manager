@@ -846,7 +846,7 @@ void MakeChMapBroadcastTimer() {
 }
 
 public Action Timer_WelcomeMessage(Handle timer, any param) {
-	PrintToChatAll("\x03[ACS]\x04 %t", "Change map advertise", "\x05!chmap\x01");
+	PrintToChatAll("\x03[ACS]\x01 %t", "Change map advertise", "\x04!chmap\x01");
 }
 
 /*======================================================================================
