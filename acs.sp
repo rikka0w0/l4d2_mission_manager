@@ -87,16 +87,18 @@
 
 //Global Variables
 LMM_GAMEMODE g_iGameMode;			//Integer to store the gamemode
-new g_iRoundEndCounter;				//Round end event counter for versus
-new g_iCoopFinaleFailureCount;		//Number of times the Survivors have lost the current finale
-new bool:g_bFinaleWon;				//Indicates whether a finale has be beaten or not
+int g_iRoundEndCounter;				//Round end event counter for versus
+int g_iCoopFinaleFailureCount;		//Number of times the Survivors have lost the current finale
+bool g_bFinaleWon;				//Indicates whether a finale has be beaten or not
 
 //Voting Variables					
-new bool:g_bClientShownVoteAd[MAXPLAYERS + 1];				//If the client has seen the ad already
-new bool:g_bClientVoted[MAXPLAYERS + 1];					//If the client has voted on a map
-new g_iClientVote[MAXPLAYERS + 1];							//The value of the clients vote
-new g_iWinningMapIndex;										//Winning map/campaign's index
-new g_iWinningMapVotes;										//Winning map/campaign's number of votes
+bool g_bClientShownVoteAd[MAXPLAYERS + 1];				//If the client has seen the ad already
+bool g_bClientVoted[MAXPLAYERS + 1];					//If the client has voted on a map
+int g_iWinningMapVotes;									//Winning map/campaign's number of votes
+// For Coop/Versus: missionIndex of the winning campaign
+// For Scavenge/Survival: uniqueID of the winning map
+int g_iClientVote[MAXPLAYERS + 1];						//The value of the clients vote
+int g_iWinningMapIndex;									//Winning map/campaign's index
 
 //Console Variables (CVars)
 ConVar g_hCVar_VotingEnabled;			//Tells if the voting system is on	
@@ -1113,11 +1115,12 @@ void CheckMapForChange() {
 			
 			//Check to see if someone voted for a campaign, if so, then change to the winning campaign
 			if(g_hCVar_VotingEnabled.BoolValue && g_iWinningMapVotes > 0 && g_iWinningMapIndex >= 0) {
-				ACS_GetFirstMapName(g_iGameMode, g_iWinningMapIndex, mapName, sizeof(mapName));
+				// Get the name of the next first map
+				LMM_GetMapName(g_iGameMode, g_iWinningMapIndex, 0, mapName, sizeof(mapName));
 				if(IsMapValid(mapName)) {
 					for (int client = 1; client <= MaxClients; client++) {
 						if (IsClientInGame(client)) {
-							ACS_GetLocalizedMissionName(g_iGameMode, g_iWinningMapIndex, client, localizedName, sizeof(localizedName));
+							LMM_GetMissionLocalizedName(g_iGameMode, g_iWinningMapIndex, localizedName, sizeof(localizedName), client);
 							Format(colorizedname, sizeof(colorizedname), "\x04%s\x05", localizedName);
 							PrintToChat(client, "\x03[ACS]\x05 %t", "Switching to the vote winner", colorizedname);
 						}
@@ -1544,10 +1547,10 @@ public VoteMenuHandler(int iClient, bool dontCare, int missionIndex, int mapInde
 		PrintHintText(iClient, "%t", "You did not vote", "!mapvote");
 	} else if(g_iGameMode == GAMEMODE_SCAVENGE) {
 		LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), iClient);
-		PrintHintText(iClient, "%t", "You voted for", "!mapvote", "!mapvotes", localizedName);
+		PrintHintText(iClient, "%t", "You voted for", localizedName, "!mapvote", "!mapvotes");
 	} else {
 		LMM_GetMissionLocalizedName(g_iGameMode, missionIndex, localizedName, sizeof(localizedName), iClient);
-		PrintHintText(iClient, "%t", "You voted for", "!mapvote", "!mapvotes", localizedName);
+		PrintHintText(iClient, "%t", "You voted for", localizedName, "!mapvote", "!mapvotes");
 	}
 }
 
