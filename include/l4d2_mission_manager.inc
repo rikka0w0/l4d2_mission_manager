@@ -32,7 +32,7 @@ native int LMM_GetMissionName(LMM_GAMEMODE gamemode, int missionIndex, char[] mi
 native int LMM_GetMissionLocalizedName(LMM_GAMEMODE gamemode, int missionIndex, char[] missionName, int length, int client);
 
 native int LMM_GetNumberOfMaps(LMM_GAMEMODE gamemode, int missionIndex);
-native int LMM_FindMapIndexByName(LMM_GAMEMODE gamemode, int& missionIndex, const char[] missionName);
+native int LMM_FindMapIndexByName(LMM_GAMEMODE gamemode, int& missionIndex, const char[] mapName);
 native int LMM_GetMapName(LMM_GAMEMODE gamemode, int missionIndex, int mapIndex, char[] mapName, int length);
 /** 
 	Attempt to localize the map name, return 1 for success, 0 for no localization and -1 for error. 
