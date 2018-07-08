@@ -1113,6 +1113,14 @@ public Action Event_PlayerDisconnect(Handle hEvent, const char[] strName, bool b
 void CheckEmptyServer() {
 	if (!g_hCVar_PreventEmptyServer.BoolValue)
 		return;	// Feature disabled
+		
+	for (int client = 1; client <= MaxClients; client++) {
+		if (!IsClientInGame(client))
+			continue;	// Not a valid client id
+
+		if (!IsFakeClient(client))
+			return;		// Someone is in the server
+	}
 
 	char mapName[LEN_MAP_FILENAME];
 	GetCurrentMap(mapName,sizeof(mapName));					//Get the current map from the game
