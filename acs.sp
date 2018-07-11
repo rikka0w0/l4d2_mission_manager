@@ -114,6 +114,7 @@ ConVar g_hCVar_ChMapPolicy;				//The behavior of "!chmap"
 ConVar g_hCVar_PreventEmptyServer;		//If enabled, the server automatically switch to the first available official map when no one is playing a 3-rd map
 
 Handle g_hTimer_ChMapBroadcast;
+Handle g_hTimer_CheckEmpty;
 
 /*=========================================================
 #########       Mission Cycle Data Storage        #########
@@ -608,7 +609,7 @@ bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
 	IntToString(mapIndex, menuInfo, sizeof(menuInfo));	
 	menuVote.AddItem(menuInfo, "No");
 	menuVote.ExitButton = false;
-	menuVote.DisplayVoteToAll(MENU_TIME_FOREVER);
+	menuVote.DisplayVoteToAll(20);
 }
 
 public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2) {
@@ -1064,6 +1065,10 @@ public void OnMapStart() {
 	ResetAllVotes();				//Reset every player's vote
 }
 
+public void OnMapEnd() {
+	KillEmptyCheckTimer();
+}
+
 //Event fired when the Survivors leave the start area
 public Action Event_PlayerLeftStartArea(Handle hEvent, const char[] strName, bool bDontBroadcast) {	
 	if(g_hCVar_VotingEnabled.BoolValue == true && OnFinaleOrScavengeMap() == true)
@@ -1120,7 +1125,7 @@ public Action Event_ScavengeMapFinished(Handle hEvent, const char[] strName, boo
 public Action Event_PlayerDisconnect(Handle hEvent, const char[] strName, bool bDontBroadcast) {
 	int iClient = GetClientOfUserId(GetEventInt(hEvent, "userid"));
 	
-	if(iClient	< 1)
+	if(iClient < 1)
 		return Plugin_Continue;
 		
 	//Reset the client's votes
@@ -1140,15 +1145,23 @@ public Action Event_PlayerDisconnect(Handle hEvent, const char[] strName, bool b
 #################             A C S   C H A N G E   M A P              #################
 ======================================================================================*/
 void CheckEmptyServer() {
+	if (IsEmptyServer()) {
+		if (g_hTimer_CheckEmpty == null) {
+			g_hTimer_CheckEmpty = CreateTimer(5.0, Timer_CheckEmptyServer, INVALID_HANDLE, TIMER_REPEAT);
+		}
+	}
+}
+
+bool IsEmptyServer() {
 	if (!g_hCVar_PreventEmptyServer.BoolValue)
-		return;	// Feature disabled
+		return false;	// Feature disabled
 		
 	for (int client = 1; client <= MaxClients; client++) {
 		if (!IsClientInGame(client))
 			continue;	// Not a valid client id
 
 		if (!IsFakeClient(client))
-			return;		// Someone is in the server
+			return false;	// Someone is in the server
 	}
 
 	char mapName[LEN_MAP_FILENAME];
@@ -1159,13 +1172,37 @@ void CheckEmptyServer() {
 	
 	for (int cycleIndex=0; cycleIndex<ACS_GetCycledMissionCount(g_iGameMode); cycleIndex++) {
 		if (ACS_GetMissionIndex(g_iGameMode, cycleIndex) == missionIndex)
-			return;	// Current map/mission is in cycle
+			return false;	// Current map/mission is in cycle
 	}
 	
 	// Current map/mission is not in cycle
-	ACS_GetFirstMapName(g_iGameMode, 0, mapName, sizeof(mapName));
-	PrintToServer("Empty server is running 3-rd map, switching to the first official map!");
-	ForceChangeLevel(mapName, "Empty server with 3-rd map");
+	return true;
+}
+
+void KillEmptyCheckTimer() {
+	if (g_hTimer_CheckEmpty != null) {
+		KillTimer(g_hTimer_CheckEmpty);
+		g_hTimer_CheckEmpty = null;
+	}
+}
+
+public Action Timer_CheckEmptyServer(Handle timer, any param) {
+	static int counter = 0;
+	if (IsEmptyServer()){
+		counter++;
+		if (counter > 10) {	// Idle for 50s
+			counter = 0;
+			KillEmptyCheckTimer();
+			
+			char mapName[LEN_MAP_FILENAME];
+			ACS_GetFirstMapName(g_iGameMode, 0, mapName, sizeof(mapName));
+			LogMessage("Empty server is running 3-rd map, switching to the first official map!");
+			ForceChangeLevel(mapName, "Empty server with 3-rd map");			
+		}
+	} else {
+		// Some one joined
+		KillEmptyCheckTimer();
+	}
 }
 
 //Check to see if the current map is a finale, and if so, switch to the next campaign
@@ -1392,10 +1429,10 @@ void DisplayNextMapToAll() {
 					LMM_GetMapName(g_iGameMode, missionIndex, mapIndex, mapName, sizeof(mapName));
 					
 					if(StrEqual(strCurrentMap, mapName, false)) {
-						if (mapIndex == mapCount - 1) {	// Last map of a mission
+						if (mapIndex >= mapCount - 1) {	// Last map of a mission
 							mapIndex = 0;	// Switch to the first map of the next mission
 							
-							if (cycleIndex == ACS_GetCycledMissionCount(g_iGameMode) - 1) {	// End of mission cycle
+							if (cycleIndex >= ACS_GetCycledMissionCount(g_iGameMode) - 1) {	// End of mission cycle
 								cycleIndex = 0;
 							} else {
 								cycleIndex++;
@@ -1431,7 +1468,7 @@ void DisplayNextMapToAll() {
 			for(int cycleIndex = 0; cycleIndex < cycleCount; cycleIndex++)	{
 				ACS_GetLastMapName(g_iGameMode, cycleIndex, mapName, sizeof(mapName));
 				if(StrEqual(strCurrentMap, mapName, false)) {
-					if (cycleIndex == ACS_GetCycledMissionCount(g_iGameMode) - 1) {	//Check to see if its the end of the array
+					if (cycleIndex >= ACS_GetCycledMissionCount(g_iGameMode) - 1) {	//Check to see if its the end of the array
 						cycleIndex = 0;					//If so, start the array over by setting to -1 + 1 = 0
 					} else {
 						cycleIndex ++;
