@@ -110,6 +110,7 @@ ConVar g_hCVar_NextMapAdMode;			//The way to advertise the next map
 ConVar g_hCVar_NextMapAdInterval;		//Interval for ACS next map advertisement
 ConVar g_hCVar_MaxFinaleFailures;		//Amount of times Survivors can fail before ACS switches in coop
 ConVar g_hCVar_ChMapBroadcastInterval;	//The interval for advertising "!chmap"
+ConVar g_hCVar_ChMapPolicy;				//The behavior of "!chmap" 
 ConVar g_hCVar_PreventEmptyServer;		//If enabled, the server automatically switch to the first available official map when no one is playing a 3-rd map
 
 Handle g_hTimer_ChMapBroadcast;
@@ -639,17 +640,36 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 	} else if (action == MenuAction_VoteCancel && param1 == VoteCancel_NoVotes) {
 		PrintToChatAll("\x03[ACS]\x04 %t", "No Votes Cast");
 	} else if (action == MenuAction_VoteEnd) {
-		// param1: The chosen item, param2: vote result
-		float percent, limit;
-		int votes, totalVotes;
-
+		// param1: The winning item, param2: vote result
+		int votes, totalVotes;	// totalVotes != numOfPlayers
 		GetMenuVoteInfo(param2, votes, totalVotes);
 		
-		if (param1 == 1) {
-			votes = totalVotes - votes; // Reverse the votes to be in relation to the Yes option.
-		}
+		int playerCount = 0;
+		for(int iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
+			if(IsClientInGame(iPlayer) && !IsFakeClient(iPlayer))
+				playerCount++;
 		
-		percent = float(votes) / float(totalVotes);
+		int abstention = playerCount - totalVotes;
+		int yesVotes, noVotes;
+		if (param1 == 1) {	// "No" is winning
+			yesVotes = totalVotes - votes; // Reverse the votes to be in relation to the Yes option.
+			noVotes = votes;
+		} else {	// "Yes" is winning
+			yesVotes = votes;
+			noVotes = totalVotes - votes;
+		}
+
+		float percent, limit;
+		if (g_hCVar_ChMapPolicy.IntValue == 1) {
+			// Treat abstention as NO
+			percent = float(yesVotes) / float(playerCount);
+		} else if (g_hCVar_ChMapPolicy.IntValue == 2) {
+			// Treat abstention as YES, highly not recommended
+			percent = float(yesVotes + abstention) / float(playerCount);
+		} else {
+			// Disabled
+			return 0;
+		}
 		
 		ConVar limitConVar = FindConVar("sm_vote_map");
 		if (limitConVar == null) {
@@ -657,13 +677,13 @@ public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2
 		} else {
 			limit = limitConVar.FloatValue;
 		}
-		
+
 		// A multi-argument vote is "always successful", but have to check if its a Yes/No vote.
-		if (param1 == 1) {
+		if (percent < limit) {
 			LogAction(-1, -1, "Vote failed.");
-			PrintToChatAll("\x03[ACS]\x04 %t", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), totalVotes);
+			PrintToChatAll("\x03[ACS]\x04 %t  \x01[%d,%d,%d]", "Vote Failed", RoundToNearest(100.0*limit), RoundToNearest(100.0*percent), playerCount, yesVotes, noVotes, abstention);
 		} else {
-			PrintToChatAll("\x03[ACS]\x04 %t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
+			PrintToChatAll("\x03[ACS]\x04 %t  \x01[%d,%d,%d]", "Vote Successful", RoundToNearest(100.0*percent), playerCount, yesVotes, noVotes, abstention);
 			
 			char menuInfo[MMC_ITEM_LEN_INFO];
 			menu.GetItem(0, menuInfo, sizeof(menuInfo));
@@ -789,6 +809,7 @@ public void OnPluginStart() {
 	g_hCVar_NextMapAdMode = CreateConVar("acs_next_map_ad_mode", "2", "Sets how the next campaign/map is advertised during a finale or scavenge map [0 = DISABLED, 1 = HINT TEXT, 2 = CHAT TEXT]", _, true, 0.0, true, 2.0);
 	g_hCVar_NextMapAdInterval = CreateConVar("acs_next_map_ad_interval", "60.0", "The time, in seconds, between advertisements for the next campaign/map on finales and scavenge maps", _, true, 60.0, false);
 	g_hCVar_MaxFinaleFailures = CreateConVar("acs_max_coop_finale_failures", "0", "The amount of times the survivors can fail a finale in Coop before it switches to the next campaign [0 = INFINITE FAILURES]", _, true, 0.0, false);
+	g_hCVar_ChMapPolicy =  CreateConVar("acs_chmap_policy", "0", "Enable or disable \"!chmap\" and \"!chmap2\" commands\n 0 - Disabled (by default) \n 1 - Enabled, abstention is treated as NO \n 2 - Enabled, abstention is treated as YES. \n Option 2 can be used by trolls and griefers to force a map change as long as nobody else votes!");	
 	g_hCVar_ChMapBroadcastInterval =  CreateConVar("acs_chmap_broadcast_interval", "180.0", "Controls the frequency of the \"!chmap\" advertisement, in second.");	
 	g_hCVar_PreventEmptyServer =  CreateConVar("acs_prevent_empty_server", "1", "If enabled, the server automatically switch to the first available official map when no one is playing a 3-rd map [0 = DISABLED, 1 = ENABLED]", _, true, 0.0, true, 1.0);	
 	
@@ -822,17 +843,25 @@ public void OnPluginStart() {
 }
 
 public Action Command_ChangeMapVote(int iClient, int args) {
+	if (g_hCVar_ChMapPolicy.IntValue < 1)
+		return Plugin_Handled;	// Disabled
+
 	ShowMissionChooser(iClient, (g_iGameMode == GAMEMODE_SCAVENGE || g_iGameMode == GAMEMODE_SURVIVAL), false);
 	
 	//Play a sound to indicate that the user can vote on a map
 	EmitSoundToClient(iClient, SOUND_NEW_VOTE_START);
+	return Plugin_Handled;
 }
 
 public Action Command_ChangeMapVote2(int iClient, int args) {
+	if (g_hCVar_ChMapPolicy.IntValue < 1)
+		return Plugin_Handled;	// Disabled
+
 	ShowMissionChooser(iClient, true, false);
 
 	//Play a sound to indicate that the user can vote on a map
 	EmitSoundToClient(iClient, SOUND_NEW_VOTE_START);	
+	return Plugin_Handled;
 }
 
 public void OnConfigsExecuted() {
