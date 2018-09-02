@@ -1,0 +1,23 @@
+﻿"Phrases"
+{
+	"Switch Map/Mission"
+	{
+		"en"		"切换地图/战役"
+	}
+	
+	"All maps"
+	{
+		"en"		"所有地图"
+	}
+	
+	"Choose a Map"
+	{
+		"en"		"请选择一个地图"
+	}
+	
+	"Admin is forcing a map change"
+	{
+		"#format"		"{1:s}"
+		"en"		"管理员正在将地图更换为 {1}"
+	}
+}
