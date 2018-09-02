@@ -378,7 +378,7 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 #define MMC_ITEM_ALLMAPS_TEXT "All maps"
 #define MMC_ITEM_MISSION_TEXT "Mission"
 #define MMC_ITEM_MAP_TEXT "Map"
-bool ShowMissionChooser(int iClient, bool isMap, bool isVote) {
+bool ShowMissionChooser(int iClient, bool isMap, bool isVote, int prevLevelMenuPage=0) {
 	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
 		return false;
 	
@@ -408,7 +408,7 @@ bool ShowMissionChooser(int iClient, bool isMap, bool isVote) {
 	chooser.ExitButton = true;
 	
 	//And finally, show the menu to the client
-	chooser.Display(iClient, MENU_TIME_FOREVER);
+	chooser.DisplayAt(iClient, prevLevelMenuPage, MENU_TIME_FOREVER);
 		
 	return true;	
 }
@@ -445,12 +445,12 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 					// Voting for a map
 					if (item == 1) {
 						// "All map" is selected, prepare map list for all missions
-						ShowMapChooser(client, true, -1);
+						ShowMapChooser(client, true, -1, menu.Selection);
 					} else {
 						// A mission is selected, prepare a map list for the selected mission
 						menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 						int cycleIndex = StringToInt(menuName);
-						ShowMapChooser(client, true, cycleIndex);	
+						ShowMapChooser(client, true, cycleIndex, menu.Selection);
 					}
 				} else {
 					// Voting for a mission
@@ -468,12 +468,12 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 			if (StrEqual(menuInfo, MMC_ITEM_ALLMAPS_TEXT, false)) {
 				if (item == 0) {
 					// "All map" is selected, prepare map list for all missions
-					ShowMapChooser(client, false, -1);
+					ShowMapChooser(client, false, -1, menu.Selection);
 				} else {
 					// A mission is selected, prepare a map list for the selected mission
 					menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
 					int cycleIndex = StringToInt(menuName);
-					ShowMapChooser(client, false, cycleIndex);
+					ShowMapChooser(client, false, cycleIndex, menu.Selection);
 				}
 				// Browse map list
 			} else {
@@ -505,13 +505,13 @@ public int MissionChooserMenuHandler(Menu menu, MenuAction action, int client, i
 	return 0;
 }
 
-bool ShowMapChooser(int iClient, bool isVote, int cycleIndex) {
+bool ShowMapChooser(int iClient, bool isVote, int cycleIndex, int prevLevelMenuPage) {
 	if(iClient < 1 || IsClientInGame(iClient) == false || IsFakeClient(iClient) == true)
 		return false;
 	
-	int flags = isVote ? 1 : 0;
 	char menuInfo[MMC_ITEM_LEN_INFO];
-	IntToString(flags, menuInfo, sizeof(menuInfo));	// Use menu info to store the status of isVote
+	// Use menu info to store value of isVote and prevLevelMenuPage
+	Format(menuInfo, sizeof(menuInfo), "%d,%d", (isVote ? 1 : 0), prevLevelMenuPage);
 	
 	//Create the menu
 	Menu chooser = CreateMenu(MapChooserMenuHandler, MenuAction_Select | MenuAction_DisplayItem | MenuAction_End | MenuAction_Cancel);
@@ -563,7 +563,10 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		if (item == MenuCancel_ExitBack) {
 			// Open main menu
 			menu.GetItem(0, menuInfo, sizeof(menuInfo));
-			ShowMissionChooser(client, true, StrEqual(menuInfo, "1", false));
+			ExplodeString(menuInfo, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+			bool isVote = StringToInt(buffer_split[0]) == 1;
+			int prevLevelMenuPage = StringToInt(buffer_split[1]);
+			ShowMissionChooser(client, true, isVote, prevLevelMenuPage);
 		}
 	} else if (action == MenuAction_DisplayItem) {
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
