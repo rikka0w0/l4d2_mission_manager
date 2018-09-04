@@ -17,6 +17,14 @@ Menu g_Menu_MissionChooser;
 
 LMM_GAMEMODE g_iGameMode;
 
+public Plugin myinfo = {
+	name = "L4D2 MissionManager AdminMenu",
+	author = "Rikka0w0",
+	description = "Map/Campaign menu for server admins, see Admin Menu -> Server Commands",
+	version = "v1.0.0",
+	url = "http://forums.alliedmods.net/showthread.php?t=308708"
+}
+
 public void OnPluginStart(){
 	LoadTranslations("l4d2_mm_adminmenu");
 
@@ -64,7 +72,7 @@ public void ItemHandler(Handle topmenu, TopMenuAction action, TopMenuObject obje
 		
 		//Create the menu
 		if (g_Menu_MissionChooser == null) {
-			g_Menu_MissionChooser = CreateMenu(MissionChooserMenuHandler, MenuAction_Select | MenuAction_Cancel | MenuAction_DisplayItem);
+			g_Menu_MissionChooser = CreateMenu(MissionChooserMenuHandler, MenuAction_Select | MenuAction_Cancel | MenuAction_DisplayItem | MenuAction_Display);
 			g_Menu_MissionChooser.SetTitle("%T", MMAM_MC_TITLE, LANG_SERVER);
 			g_Menu_MissionChooser.AddItem(MMAM_MC_INFO_ALL, "all maps");
 			

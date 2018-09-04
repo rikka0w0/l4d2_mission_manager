@@ -1,11 +1,13 @@
 //////////////////////////////////////////
 // Automatic Campaign Switcher for L4D2 //
-// Version 1.2.2                        //
-// Compiled May 21, 2011                //
-// Programmed by Chris Pringle          //
+// Version 1.9.9                        //
+// Compiled Sep 5, 2018                 //
+// Programmed by Rikka                  //
 //////////////////////////////////////////
 
 /*==================================================================================================
+
+	*** REQUIRES l4d2_mission_manager ***
 
 	This plugin was written in response to the server kicking everyone if the vote is not passed
 	at the end of the campaign. It will automatically switch to the appropriate map at all the
@@ -15,18 +17,27 @@
 	loads.
 
 	Supported Game Modes in Left 4 Dead 2
-	
 		Coop
-		Realism
 		Versus
-		Team Versus
 		Scavenge
+		Survival
+
+	Untested Game Modes in Left 4 Dead 2
+		Realism
+		Team Versus
 		Team Scavenge
 		Mutation 1-20
 		Community 1-5
 
 	Change Log
+		----- Rikka's upgraded version -----
+		v1.9.9 (Sep 5, 2018)	- Transformed to new SourcePawn syntax
+								- Fixed incorrect reading of CVars
+								- Removed hardcoded map lists
+								- Added "sm_chmap" and "sm_chmap2" commands
+								- Colorized chat messages
 		
+		----- Chris Pringle's original version -----
 		v1.2.2 (May 21, 2011)	- Added message for new vote winner when a player disconnects
 								- Fixed the sound to play to all the players in the game
 								- Added a max amount of coop finale map failures cvar
@@ -62,7 +73,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v1.9.0"
+#define PLUGIN_VERSION	"v1.9.9"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -1073,7 +1084,8 @@ public void OnMapEnd() {
 }
 
 //Event fired when the Survivors leave the start area
-public Action Event_PlayerLeftStartArea(Handle hEvent, const char[] strName, bool bDontBroadcast) {	
+public Action Event_PlayerLeftStartArea(Handle hEvent, const char[] strName, bool bDontBroadcast) {
+	//PrintToChatAll("Event_PlayerLeftStartArea");
 	if(g_hCVar_VotingEnabled.BoolValue == true && OnFinaleOrScavengeMap() == true)
 		CreateTimer(g_hCVar_VotingAdDelayTime.FloatValue, Timer_DisplayVoteAdToAll, _, TIMER_FLAG_NO_MAPCHANGE);
 	
@@ -1600,9 +1612,12 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 
 //Timer to show the menu to the players if they have not voted yet
 public Action Timer_DisplayVoteAdToAll(Handle hTimer, any iData) {
+	//PrintToChatAll("Timer_DisplayVoteAdToAll");
 	if(!g_hCVar_VotingEnabled.BoolValue || !OnFinaleOrScavengeMap())
 		return Plugin_Stop;
 	
+	//PrintToChatAll("DISPLAY_MODE");
+
 	for(int iClient = 1;iClient <= MaxClients; iClient++) {
 		if(
 			!g_bClientShownVoteAd[iClient] && !g_bClientVoted[iClient] &&
