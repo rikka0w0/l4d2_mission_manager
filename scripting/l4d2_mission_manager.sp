@@ -9,7 +9,7 @@ public Plugin myinfo = {
 	name = "L4D2 Mission Manager",
 	author = "Rikka0w0",
 	description = "Mission manager for L4D2, provide information about map orders for other plugins",
-	version = "v0.9.0",
+	version = "v1.0.0",
 	url = "http://forums.alliedmods.net/showthread.php?t=308725"
 }
 
@@ -816,7 +816,7 @@ void CacheMissions() {
         SetFailState("Could not locate mission folder");
 	} else {	
 		if (!DirExists("missions.cache")) {
-			CreateDirectory("missions.cache", 777);
+			CreateDirectory("missions.cache", 511);
 		}
 		
 		char missionFileName[PLATFORM_MAX_PATH];
