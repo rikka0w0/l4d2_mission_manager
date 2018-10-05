@@ -1085,8 +1085,7 @@ public void OnMapEnd() {
 
 //Event fired when the Survivors leave the start area
 public Action Event_PlayerLeftStartArea(Handle hEvent, const char[] strName, bool bDontBroadcast) {
-	//PrintToChatAll("Event_PlayerLeftStartArea");
-	if(g_hCVar_VotingEnabled.BoolValue == true && OnFinaleOrScavengeMap() == true)
+	if(g_hCVar_VotingEnabled.BoolValue && OnFinaleOrScavengeMap())
 		CreateTimer(g_hCVar_VotingAdDelayTime.FloatValue, Timer_DisplayVoteAdToAll, _, TIMER_FLAG_NO_MAPCHANGE);
 	
 	return Plugin_Continue;
@@ -1374,7 +1373,8 @@ void ChangeScavengeMap() {
 public Action Timer_AdvertiseNextMap(Handle timer, any param) {
 	//If next map advertising is enabled, display the text and start the timer again
 	if(g_hCVar_NextMapAdMode.IntValue != DISPLAY_MODE_DISABLED)	{
-		DisplayNextMapToAll();
+		if (OnFinaleOrScavengeMap())
+			DisplayNextMapToAll();
 		CreateTimer(g_hCVar_NextMapAdInterval.FloatValue, Timer_AdvertiseNextMap, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
@@ -1612,11 +1612,23 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 
 //Timer to show the menu to the players if they have not voted yet
 public Action Timer_DisplayVoteAdToAll(Handle hTimer, any iData) {
-	//PrintToChatAll("Timer_DisplayVoteAdToAll");
-	if(!g_hCVar_VotingEnabled.BoolValue || !OnFinaleOrScavengeMap())
-		return Plugin_Stop;
+	AttempDisplayVoteMenu();
 	
-	//PrintToChatAll("DISPLAY_MODE");
+	return Plugin_Stop;
+}
+
+void AttempDisplayVoteMenu() {
+	if(!g_hCVar_VotingEnabled.BoolValue || !OnFinaleOrScavengeMap())
+		return;
+
+	int entityRes = FindEntityByClassname(-1, "terror_player_manager");	// Resource Entity
+	bool survivorLeftSaferoom = false;
+	if (entityRes != -1) {
+		survivorLeftSaferoom = view_as<bool> (GetEntProp(entityRes, Prop_Send, "m_hasAnySurvivorLeftSafeArea", 1));
+	}
+
+	if (!survivorLeftSaferoom)
+		return;
 
 	for(int iClient = 1;iClient <= MaxClients; iClient++) {
 		if(
@@ -1632,8 +1644,6 @@ public Action Timer_DisplayVoteAdToAll(Handle hTimer, any iData) {
 			g_bClientShownVoteAd[iClient] = true;
 		}
 	}
-	
-	return Plugin_Stop;
 }
 
 //Draw the menu for voting
