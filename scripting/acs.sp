@@ -1,7 +1,7 @@
 //////////////////////////////////////////
 // Automatic Campaign Switcher for L4D2 //
-// Version 1.9.9                        //
-// Compiled Sep 5, 2018                 //
+// Version 2.0.0                        //
+// Compiled Oct 7, 2018                 //
 // Programmed by Rikka                  //
 //////////////////////////////////////////
 
@@ -31,6 +31,8 @@
 
 	Change Log
 		----- Rikka's upgraded version -----
+		v2.0.0 (Oct 7, 2018)	- Appied Lux's patch, players should see the next map voting menu anyway
+		
 		v1.9.9 (Sep 5, 2018)	- Transformed to new SourcePawn syntax
 								- Fixed incorrect reading of CVars
 								- Removed hardcoded map lists
@@ -73,7 +75,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v1.9.9"
+#define PLUGIN_VERSION	"v2.0.0"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -842,8 +844,6 @@ public void OnPluginStart() {
 	AutoExecConfig(true, "acs");
 	
 	//Hook the game events
-	//HookEvent("round_start", Event_RoundStart);
-	HookEvent("player_left_start_area", Event_PlayerLeftStartArea);
 	HookEvent("round_end", Event_RoundEnd);
 	HookEvent("finale_win", Event_FinaleWin);
 	HookEvent("scavenge_match_finished", Event_ScavengeMapFinished);
@@ -884,7 +884,10 @@ public void OnConfigsExecuted() {
 
 	//Display advertising for the next campaign or map
 	if(g_hCVar_NextMapAdMode.IntValue != DISPLAY_MODE_DISABLED)
-		 CreateTimer(g_hCVar_NextMapAdInterval.FloatValue, Timer_AdvertiseNextMap, _, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(g_hCVar_NextMapAdInterval.FloatValue, Timer_AdvertiseNextMap, _, TIMER_FLAG_NO_MAPCHANGE);
+		 
+	if(g_hCVar_VotingEnabled.BoolValue)
+		CreateTimer(g_hCVar_VotingAdDelayTime.FloatValue, Timer_DisplayVoteAdToAll, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void MakeChMapBroadcastTimer() {
@@ -1081,14 +1084,6 @@ public void OnMapStart() {
 
 public void OnMapEnd() {
 	KillEmptyCheckTimer();
-}
-
-//Event fired when the Survivors leave the start area
-public Action Event_PlayerLeftStartArea(Handle hEvent, const char[] strName, bool bDontBroadcast) {
-	if(g_hCVar_VotingEnabled.BoolValue && OnFinaleOrScavengeMap())
-		CreateTimer(g_hCVar_VotingAdDelayTime.FloatValue, Timer_DisplayVoteAdToAll, _, TIMER_FLAG_NO_MAPCHANGE);
-	
-	return Plugin_Continue;
 }
 
 //Event fired when the Round Ends
@@ -1612,23 +1607,19 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 
 //Timer to show the menu to the players if they have not voted yet
 public Action Timer_DisplayVoteAdToAll(Handle hTimer, any iData) {
-	AttempDisplayVoteMenu();
-	
-	return Plugin_Stop;
-}
-
-void AttempDisplayVoteMenu() {
 	if(!g_hCVar_VotingEnabled.BoolValue || !OnFinaleOrScavengeMap())
-		return;
+		return Plugin_Stop;
 
+	// Check if anyone left the saferoom
 	int entityRes = FindEntityByClassname(-1, "terror_player_manager");	// Resource Entity
 	bool survivorLeftSaferoom = false;
 	if (entityRes != -1) {
 		survivorLeftSaferoom = view_as<bool> (GetEntProp(entityRes, Prop_Send, "m_hasAnySurvivorLeftSafeArea", 1));
 	}
 
+	// If nobody left, keep waiting...
 	if (!survivorLeftSaferoom)
-		return;
+		return Plugin_Continue;
 
 	for(int iClient = 1;iClient <= MaxClients; iClient++) {
 		if(
@@ -1644,6 +1635,8 @@ void AttempDisplayVoteMenu() {
 			g_bClientShownVoteAd[iClient] = true;
 		}
 	}
+	
+	return Plugin_Stop;
 }
 
 //Draw the menu for voting
