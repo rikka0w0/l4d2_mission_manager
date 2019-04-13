@@ -11,6 +11,19 @@
 #define MMAM_MC_NAME_LEN 20
 #define MMAM_MC_TITLE "Switch Map/Mission"
 
+/*========================================================
+#########       Mission Change SDKCall Method     #######
+========================================================*/
+bool g_bMapChanger = false;
+native bool L4D2_ChangeLevel(const char[] sMap);
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	MarkNativeAsOptional("L4D2_ChangeLevel");
+	return APLRes_Success;
+}
+
+
 // Keep track of the top menu
 TopMenu g_TopMenu_AdminMenu = null;
 Menu g_Menu_MissionChooser;
@@ -36,11 +49,22 @@ public void OnPluginStart(){
 	}
 }
 
+public void OnLibraryAdded(const char[] sName)
+{
+	if(StrEqual(sName, "l4d2_changelevel")) {
+		g_bMapChanger = true;
+	}
+}
+
 public void OnLibraryRemoved(const char[] name) {
 	if (StrEqual(name, "adminmenu", false)) {
 		g_TopMenu_AdminMenu = null;
 	}
+	else if(StrEqual(name, "l4d2_changelevel")) {
+		g_bMapChanger = true;
+	}
 }
+
 
 public void OnMapStart() {	
 	//Set the game mode
@@ -220,8 +244,10 @@ public Action Timer_ChangeMap(Handle timer, DataPack dp) {
 	dp.Reset();
 	dp.ReadString(mapName, sizeof(mapName));
 	
-	ShutDownScriptedMode();
-	ForceChangeLevel(mapName, "Admin forced a map change");
-	
+	if(!g_bMapChanger || !L4D2_ChangeLevel(mapName))
+	{
+		ShutDownScriptedMode();
+		ForceChangeLevel(mapName, "Admin forced a map change");
+	}
 	return Plugin_Stop;
 }

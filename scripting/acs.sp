@@ -129,6 +129,37 @@ ConVar g_hCVar_PreventEmptyServer;		//If enabled, the server automatically switc
 Handle g_hTimer_ChMapBroadcast;
 Handle g_hTimer_CheckEmpty;
 
+
+/*========================================================
+#########       Mission Change SDKCall Method     #######
+========================================================*/
+bool g_bMapChanger = false;
+native bool L4D2_ChangeLevel(const char[] sMap);
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	MarkNativeAsOptional("L4D2_ChangeLevel");
+	return APLRes_Success;
+}
+
+public void OnLibraryAdded(const char[] sName)
+{
+	if(StrEqual(sName, "l4d2_changelevel")) {
+		g_bMapChanger = true;
+	}
+}
+
+public void OnLibraryRemoved(const char[] sName)
+{
+	if(StrEqual(sName, "l4d2_changelevel")) {
+		g_bMapChanger = false;
+	}
+}
+
+
+
+
+
 /*=========================================================
 #########       Mission Cycle Data Storage        #########
 =========================================================*/
@@ -764,13 +795,16 @@ public Action Timer_ChangeMap(Handle timer, DataPack dp) {
 	dp.Reset();
 	dp.ReadString(mapName, sizeof(mapName));
 	
-	ShutDownScriptedMode();
-	ForceChangeLevel(mapName, "sm_votemap Result");
-	
+	if(!g_bMapChanger || !L4D2_ChangeLevel(mapName))
+	{
+		ShutDownScriptedMode();
+		ForceChangeLevel(mapName, "sm_votemap Result");
+	}
 	return Plugin_Stop;
 }
 
-public void OnAllPluginsLoaded() {
+public void OnAllPluginsLoaded() 
+{
 	if (!LibraryExists("l4d2_mission_manager")) {
 		SetFailState("l4d2_mission_manager was not found.");
 	}
@@ -785,6 +819,8 @@ public void OnAllPluginsLoaded() {
 	DumpMissionInfo(0, LMM_GAMEMODE_VERSUS);
 	DumpMissionInfo(0, LMM_GAMEMODE_SCAVENGE);
 	DumpMissionInfo(0, LMM_GAMEMODE_SURVIVAL);
+	
+	g_bMapChanger = LibraryExists("l4d2_changelevel");
 }
 
 public void OnPluginEnd() {
@@ -1208,8 +1244,11 @@ public Action Timer_CheckEmptyServer(Handle timer, any param) {
 			ACS_GetFirstMapName(g_iGameMode, 0, mapName, sizeof(mapName));
 			LogMessage("Empty server is running 3-rd map, switching to the first official map!");
 			
-			//ShutDownScriptedMode(); i guess we would need the signiture here :P
-			ForceChangeLevel(mapName, "Empty server with 3-rd map");			
+			if(!g_bMapChanger || !L4D2_ChangeLevel(mapName))
+			{
+				//ShutDownScriptedMode(); i guess we would need the signiture here :P
+				ForceChangeLevel(mapName, "Empty server with 3-rd map");			
+			}
 		}
 	} else {
 		// Some one joined
