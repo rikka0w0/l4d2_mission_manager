@@ -15,7 +15,7 @@
 #########       Mission Change SDKCall Method     #######
 ========================================================*/
 bool g_bMapChanger = false;
-native bool L4D2_ChangeLevel(const char[] sMap);
+native void L4D2_ChangeLevel(const char[] sMap);
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -244,7 +244,11 @@ public Action Timer_ChangeMap(Handle timer, DataPack dp) {
 	dp.Reset();
 	dp.ReadString(mapName, sizeof(mapName));
 	
-	if(!g_bMapChanger || !L4D2_ChangeLevel(mapName))
+	if(g_bMapChanger)
+	{
+		L4D2_ChangeLevel(mapName);
+	}
+	else
 	{
 		ShutDownScriptedMode();
 		ForceChangeLevel(mapName, "Admin forced a map change");
