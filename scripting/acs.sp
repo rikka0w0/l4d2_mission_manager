@@ -1495,19 +1495,19 @@ void DisplayNextMapTo_Scavenge(int client, bool replyCMD) {
 
 		if (replyCMD) {
 			ReplyToCommand(client, "\x03[ACS]\x05 %t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 				"The next map is currently" :
 				"The next map will be one of",
 				strbuf);
 		} else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_HINT) {
 			PrintHintText(client, "%t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 					"The next map is currently" :
 					"The next map will be one of",
 				strbuf);
 		} else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT)	{
 			PrintToChat(client, "\x03[ACS]\x05 %t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 					"The next map is currently" :
 					"The next map will be one of",
 				strbuf);
@@ -1545,19 +1545,19 @@ void DisplayNextMapTo(int client, bool replyCMD) {
 		
 		if (replyCMD) {
 			ReplyToCommand(client, "\x03[ACS]\x05 %t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 				"The next campaign is currently" :
 				"The next campaign will be one of",
 				strbuf);
 		} else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_HINT) {
 			PrintHintText(client, "%t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 					"The next campaign is currently" :
 					"The next campaign will be one of",
 				strbuf);
 		} else if(g_hCVar_NextMapAdMode.IntValue == DISPLAY_MODE_CHAT)	{
 			PrintToChat(client, "\x03[ACS]\x05 %t",
-				g_iWinningMapVotes == 1 ?
+				g_iWinningMapIndices_Len == 1 ?
 					"The next campaign is currently" :
 					"The next campaign will be one of",
 				strbuf);
