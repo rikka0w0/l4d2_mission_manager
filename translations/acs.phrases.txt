@@ -89,4 +89,15 @@
 		"#format"		"{1:s}"
 		"en"			"The next campaign is currently: {1}."
 	}
+
+	"The next map will be one of"
+	{
+		"#format"		"{1:s}"
+		"en"			"The next map will be one of: {1}."
+	}
+	"The next campaign will be one of"
+	{
+		"#format"		"{1:s}"
+		"en"			"The next campaign will be one of: {1}."
+	}
 }
