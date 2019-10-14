@@ -89,4 +89,15 @@
 		"#format"		"{1:s}"
 		"chi"			"下一张地图目前是: {1}."
 	}
+
+	"The next map will be one of"
+	{
+		"#format"		"{1:s}"
+		"chi"			"下一张地图可能是: {1}."
+	}
+	"The next campaign will be one of"
+	{
+		"#format"		"{1:s}"
+		"chi"			"下一张地图可能是: {1}."
+	}
 }
