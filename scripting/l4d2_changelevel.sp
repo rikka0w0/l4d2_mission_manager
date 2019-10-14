@@ -26,7 +26,6 @@
 
 #define PLUGIN_VERSION "1.1.2"
 
-//static Handle hInfoMapChange;
 static Handle hDirectorChangeLevel;
 
 //Credit ProdigySim for l4d2_direct reading of TheDirector class https://forums.alliedmods.net/showthread.php?t=180028
@@ -59,7 +58,7 @@ public void OnPluginStart()
 	Handle hGamedata = LoadGameConfigFile("l4d2_changelevel");
 	if(hGamedata == null) 
 		SetFailState("Failed to load \"l4d2_changelevel.txt\" gamedata.");
-		
+	
 	StartPrepSDKCall(SDKCall_Raw);
 	if(!PrepSDKCall_SetFromConf(hGamedata, SDKConf_Signature, "CDirector::OnChangeChapterVote"))
 		SetFailState("Error finding the 'CDirector::OnChangeChapterVote' signature.");
