@@ -7,9 +7,9 @@
 #endif
 #define _l4d2_changelevel_included
 
-/*
+/**
 *	@param	sMapName	Map String without .bsp
-*	@return	true Was able to change map, false otherwise.
+*	@noreturn
 */
 native void L4D2_ChangeLevel(const char[] sMapName);
 
