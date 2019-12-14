@@ -13,11 +13,11 @@
 	
 	"Choose a Map"
 	{
-		"en"			"Choose a Map"
+		"en"			"Choose the Next Map"
 	}
 	"Choose a Mission"
 	{
-		"en"			"Choose a Campaign"
+		"en"			"Choose the Next Campaign"
 	}
 	"I dont care" {
 		"en"			"I Don't Care"

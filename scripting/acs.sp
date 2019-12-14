@@ -31,8 +31,12 @@
 
 	Change Log
 		----- Rikka's upgraded version -----
-		v2.0.0 (Oct 7, 2018)	- Appied Lux's patch, players should see the next map voting menu anyway
-		
+		v2.1.1 (Dec 15, 2019)	- Allow server admins to set custom finales in coop mode
+
+		v2.1.0 (Oct 19, 2019)	- Applied Lux's patch, map switching is now more safe and memory leakage is eliminated
+
+		v2.0.0 (Oct 7, 2018)	- Applied Lux's patch, players should see the next map voting menu anyway
+
 		v1.9.9 (Sep 5, 2018)	- Transformed to new SourcePawn syntax
 								- Fixed incorrect reading of CVars
 								- Removed hardcoded map lists
@@ -75,7 +79,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v2.0.0"
+#define PLUGIN_VERSION	"v2.1.1"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -171,18 +175,23 @@ public void OnLibraryRemoved(const char[] sName)
 
 ArrayList g_hInt_MapIndexes[COUNT_LMM_GAMEMODE];
 int g_int_CyclingCount[COUNT_LMM_GAMEMODE];
+ArrayList g_hStr_MyCoopFinales;
 
 void ACS_InitLists() {
 	for (int gamemode=0; gamemode<COUNT_LMM_GAMEMODE; gamemode++) {
 		g_hInt_MapIndexes[gamemode] = new ArrayList(1);
 		g_int_CyclingCount[gamemode] = 0;
 	}
+
+	g_hStr_MyCoopFinales = new ArrayList(LEN_MAP_FILENAME);
 }
 
 void ACS_FreeLists() {
 	for (int gamemode=0; gamemode<COUNT_LMM_GAMEMODE; gamemode++) {
 		delete g_hInt_MapIndexes[gamemode];
 	}
+
+	delete g_hStr_MyCoopFinales;
 }
 
 ArrayList ACS_GetMissionIndexList(LMM_GAMEMODE gamemode) {
@@ -233,48 +242,42 @@ bool ACS_GetLocalizedMissionName(LMM_GAMEMODE gamemode, int cycleIndex, int clie
 /*====================================================
 #########       Mission Cycle Parsing        #########
 ====================================================*/
-bool HasMissionCycleFile(LMM_GAMEMODE gamemode) {
-	char path[PLATFORM_MAX_PATH];
+// Get the path of the mission cycle file, max length of char[] path = PLATFORM_MAX_PATH
+// Return the actual length of the path, -1 if failed
+int GetMissionCycleFilePath(LMM_GAMEMODE gamemode, char[] path) {
 	switch (gamemode) {
 		case LMM_GAMEMODE_COOP: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.coop.txt");
+			return BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/missioncycle.coop.txt");
 		}
 		case LMM_GAMEMODE_VERSUS: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.versus.txt");
+			return BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/missioncycle.versus.txt");
 		}
 		case LMM_GAMEMODE_SCAVENGE: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.scavenge.txt");
+			return BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/missioncycle.scavenge.txt");
 		}
 		case LMM_GAMEMODE_SURVIVAL: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.survival.txt");
+			return BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/missioncycle.survival.txt");
 		}
 		default: {
-			return false;
+			return -1;
 		}
 	}
 	
+	return -1;
+}
+
+bool HasMissionCycleFile(LMM_GAMEMODE gamemode) {
+	char path[PLATFORM_MAX_PATH];
+	if (GetMissionCycleFilePath(gamemode, path) == -1)
+		return false;
+
 	return FileExists(path);
 }
 
 File OpenMissionCycleFile(LMM_GAMEMODE gamemode, const char[] mode) {
 	char path[PLATFORM_MAX_PATH];
-	switch (gamemode) {
-		case LMM_GAMEMODE_COOP: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.coop.txt");
-		}
-		case LMM_GAMEMODE_VERSUS: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.versus.txt");
-		}
-		case LMM_GAMEMODE_SCAVENGE: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.scavenge.txt");
-		}
-		case LMM_GAMEMODE_SURVIVAL: {
-			BuildPath(Path_SM, path, sizeof(path), "configs/missioncycle.survival.txt");
-		}
-		default: {
-			return null;
-		}
-	}
+	if (GetMissionCycleFilePath(gamemode, path) == -1)
+		return null;
 	
 	return OpenFile(path, mode);
 }
@@ -413,6 +416,62 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 		}
 	}
 	ReplyToCommand(client, "-------------------");
+}
+
+/*====================================================
+#########   Custom Coop Finale List Parsing  #########
+====================================================*/
+bool LoadCustomCoopFinaleList() {
+	char path[PLATFORM_MAX_PATH];
+	int path_len = BuildPath(Path_SM, path, sizeof(path), "configs/finale.coop.txt");
+	if (path_len == -1)
+		return false;
+
+	File finaleListFile;
+
+	if (!FileExists(path)){
+		finaleListFile = OpenFile(path, "w+");
+		if (finaleListFile == null)
+			return false;
+		finaleListFile.WriteLine("// The following maps will be treated as finale maps in Coop mode. Example: c1m1_hotel. Do not delete this line!");
+		delete finaleListFile;
+		return true;
+	}
+
+	finaleListFile = OpenFile(path, "r");
+	if (finaleListFile == null)
+		return false;
+
+	// Start parsing the file
+	char buffer[128];
+	finaleListFile.ReadLine(buffer, sizeof(buffer));
+	while(!finaleListFile.EndOfFile() && finaleListFile.ReadLine(buffer, sizeof(buffer))) {
+		ReplaceString(buffer, sizeof(buffer), "\n", "");
+		TrimString(buffer);
+
+		int missionIndex;
+		int iMap = LMM_FindMapIndexByName(LMM_GAMEMODE_COOP, missionIndex, buffer);
+		if (iMap > -1) {
+			g_hStr_MyCoopFinales.PushString(buffer);
+		} else {
+			LogError("Map \"%s\" (From finale.coop.txt) is invalid!\n", buffer);
+		}
+	}
+	delete finaleListFile;
+
+	return true;
+}
+
+void DumpCustomCoopFinaleList(int client) {
+	char buffer[LEN_MAP_FILENAME];
+	int len = GetArraySize(g_hStr_MyCoopFinales);
+
+	ReplyToCommand(client, "%d valid custom coop finales from finale.coop.txt:", len);
+
+	for (int i=0; i<len; i++) {
+		g_hStr_MyCoopFinales.GetString(i, buffer, sizeof(buffer));
+		ReplyToCommand(client, "%d. %s", i+1, buffer);
+	}
 }
 
 /*===========================================
@@ -825,7 +884,10 @@ public void OnAllPluginsLoaded()
 	DumpMissionInfo(0, LMM_GAMEMODE_VERSUS);
 	DumpMissionInfo(0, LMM_GAMEMODE_SCAVENGE);
 	DumpMissionInfo(0, LMM_GAMEMODE_SURVIVAL);
-	
+
+	LoadCustomCoopFinaleList();
+	DumpCustomCoopFinaleList(0);
+
 	g_bMapChanger = LibraryExists("l4d2_changelevel");
 }
 
@@ -1518,14 +1580,33 @@ bool NextMapFromRotation(int& cycleIndex_ret) {
 		ACS_GetLastMapName(g_iGameMode, cycleIndex, mapName, sizeof(mapName));
 		if (StrEqual(strCurrentMap, mapName, false)) {
 			if (cycleIndex >= ACS_GetCycledMissionCount(g_iGameMode) - 1) {	//Check to see if its the end of the array
-				cycleIndex = 0;					//If so, start the array over by setting to -1 + 1 = 0
+				cycleIndex_ret = 0;					//If so, start the array over by setting to -1 + 1 = 0
+			} else {
+				cycleIndex_ret = cycleIndex + 1;
 			}
-			else {
-				cycleIndex++;
-			}
-
-			cycleIndex_ret = cycleIndex;
 			return true;
+		}
+	}
+
+	// If in Coop mode, Check the custom finale list
+	if (g_iGameMode == LMM_GAMEMODE_COOP) {
+		for (int i=0; i<GetArraySize(g_hStr_MyCoopFinales); i++) {
+			g_hStr_MyCoopFinales.GetString(i, mapName, sizeof(mapName));
+			if(StrEqual(strCurrentMap, mapName, false)) {
+				int iMission;
+				LMM_FindMapIndexByName(g_iGameMode, iMission, mapName);
+				// Locate the current mission in the mission cycle list
+				for (int cycleIndex = 0; cycleIndex < cycleCount; cycleIndex++) {
+					if (ACS_GetMissionIndex(g_iGameMode, cycleIndex) == iMission) {
+						if (cycleIndex >= ACS_GetCycledMissionCount(g_iGameMode) - 1) {	//Check to see if its the end of the array
+							cycleIndex_ret = 0;					//If so, start the array over by setting to -1 + 1 = 0
+						} else {
+							cycleIndex_ret = cycleIndex + 1;
+						}
+						return true;
+					}
+				}
+			}
 		}
 	}
 
@@ -1934,11 +2015,20 @@ bool OnFinaleOrScavengeMap() {
 	GetCurrentMap(strCurrentMap, sizeof(strCurrentMap));			//Get the current map from the game
 	
 	char lastMap[LEN_MAP_FILENAME];
-	//Run through all the maps, if the current map is a last campaign map, return true
+	//Run through all the maps, if the current map is a finale map, return true
 	for(int cycleIndex = 0; cycleIndex < ACS_GetMissionCount(g_iGameMode); cycleIndex++) {
 		ACS_GetLastMapName(g_iGameMode, cycleIndex, lastMap, sizeof(lastMap));
 		if(StrEqual(strCurrentMap, lastMap, false))
 			return true;
+	}
+
+	// Check if the current map is in the custom finale list
+	if (g_iGameMode == LMM_GAMEMODE_COOP) {
+		for (int i=0; i<GetArraySize(g_hStr_MyCoopFinales); i++) {
+			g_hStr_MyCoopFinales.GetString(i, lastMap, sizeof(lastMap));
+			if(StrEqual(strCurrentMap, lastMap, false))
+				return true;
+		}
 	}
 
 	return false;

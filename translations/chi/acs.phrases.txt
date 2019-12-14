@@ -13,11 +13,11 @@
 	
 	"Choose a Map"
 	{
-		"chi"			"请选择一张地图"
+		"chi"			"请选择下一张地图"
 	}
 	"Choose a Mission"
 	{
-		"chi"			"请选择一张地图"
+		"chi"			"请选择下一张地图"
 	}
 	"I dont care" {
 		"chi"			"弃票"
