@@ -56,12 +56,18 @@ native int LMM_GetNumberOfInvalidMissions();
 native int LMM_GetInvalidMissionName(int missionIndex, char[] mapName, int length);
 
 /**
+  Powered by SDKCall("CTerrorGameRules::IsMissionFinalMap").
+  Return 1 if the current map is the final of the campaign, return 0 if not.
+  Return -1 if SDKCall failed.
+**/
+native int LMM_IsOnFinalMap();
+
+/**
 	This forward is called during the OnPluginStart() phase.
 	Do NOT use any LMM APIs in OnPluginStart, due to the chance that your plugin is loaded prior to LMM.
 	LMM APIs become available in OnAllPluginsLoaded().
 **/
 forward void OnLMMUpdateList();
-
 
 /**
 	This can only work while a client is ingame.

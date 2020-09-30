@@ -31,6 +31,8 @@
 
 	Change Log
 		----- Rikka's upgraded version -----
+		v2.2.0 (Oct 1, 2020)	- Use a new SDKCall method for checking if the current map is finale or not
+
 		v2.1.1 (Dec 15, 2019)	- Allow server admins to set custom finales in coop mode
 
 		v2.1.0 (Oct 19, 2019)	- Applied Lux's patch, map switching is now more safe and memory leakage is eliminated
@@ -910,7 +912,6 @@ public Plugin myinfo = {
 /*======================================================================================
 #################             O N   P L U G I N   S T A R T            #################
 ======================================================================================*/
-
 public void OnPluginStart() {
 	LoadTranslations("acs.phrases");
 	LoadTranslations("common.phrases");
@@ -1588,7 +1589,7 @@ bool NextMapFromRotation(int& cycleIndex_ret) {
 		}
 	}
 
-	// If in Coop mode, Check the custom finale list
+	// If in Coop mode, also check the custom finale list
 	if (g_iGameMode == LMM_GAMEMODE_COOP) {
 		for (int i=0; i<GetArraySize(g_hStr_MyCoopFinales); i++) {
 			g_hStr_MyCoopFinales.GetString(i, mapName, sizeof(mapName));
@@ -2010,7 +2011,13 @@ bool OnFinaleOrScavengeMap() {
 		return false;
 	
 	// Coop or Versus
-	
+	int sdkcall_ret = LMM_IsOnFinalMap();
+	if (sdkcall_ret > -1) {
+		// SDKCall succeed
+		return sdkcall_ret == 1;
+	}
+
+  // SDKCall failed due to possible signature change, fallback to our classic method
 	char strCurrentMap[LEN_MAP_FILENAME];
 	GetCurrentMap(strCurrentMap, sizeof(strCurrentMap));			//Get the current map from the game
 	

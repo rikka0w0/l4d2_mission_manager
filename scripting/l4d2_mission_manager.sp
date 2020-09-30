@@ -20,6 +20,7 @@ public void OnPluginStart(){
 		SetFailState("Use this in Left 4 Dead or Left 4 Dead 2 only.");
 	}
 
+	InitSDKCalls();
 	CacheMissions();
 	LMM_InitLists();
 	ParseMissions();
@@ -96,6 +97,27 @@ void DumpMissionInfo(int client, LMM_GAMEMODE gamemode) {
 	ReplyToCommand(client, "-------------------");
 }
 
+/*=======================================
+#########       SDKCalls        #########
+=======================================*/
+Handle hGameConf = INVALID_HANDLE;
+Handle hSDKC_IsMissionFinalMap = INVALID_HANDLE;
+void InitSDKCalls() {
+  hGameConf = LoadGameConfigFile("l4d2_mission_manager");
+
+  // Preparing SDK Call for IsMissionFinalMap
+  StartPrepSDKCall(SDKCall_GameRules);
+  PrepSDKCall_SetFromConf(hGameConf, SDKConf_Signature, "CTerrorGameRules::IsMissionFinalMap");
+  PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);
+  hSDKC_IsMissionFinalMap = EndPrepSDKCall();
+  if(hSDKC_IsMissionFinalMap == INVALID_HANDLE)
+    PrintToServer("Failed to find CTerrorGameRules::IsMissionFinalMap signature.");
+}
+
+public int Native_IsOnFinalMap(Handle plugin, int numParams){
+  return hSDKC_IsMissionFinalMap == INVALID_HANDLE ? -1 : SDKCall(hSDKC_IsMissionFinalMap);
+}
+
 /* ========== Register Native APIs ========== */
 Handle g_hForward_OnLMMUpdateList;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
@@ -118,8 +140,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
    
 	CreateNative("LMM_GetNumberOfInvalidMissions", Native_GetNumberOfInvalidMissions);
 	CreateNative("LMM_GetInvalidMissionName", Native_GetInvalidMissionName);
+
+	CreateNative("LMM_IsOnFinalMap", Native_IsOnFinalMap);
+
 	g_hForward_OnLMMUpdateList = CreateGlobalForward("OnLMMUpdateList", ET_Ignore);
 	RegPluginLibrary("l4d2_mission_manager");
+
 	return APLRes_Success;
 }
 
