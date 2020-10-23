@@ -31,6 +31,8 @@
 
 	Change Log
 		----- Rikka's upgraded version -----
+		v2.3.0 (Oct 24, 2020)	- Add randomizer and other customizations to the next map voting menu
+
 		v2.2.0 (Oct 1, 2020)	- Use a new SDKCall method for checking if the current map is finale or not
 
 		v2.1.1 (Dec 15, 2019)	- Allow server admins to set custom finales in coop mode
@@ -81,7 +83,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v2.1.1"
+#define PLUGIN_VERSION	"v2.3.0"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -285,8 +287,6 @@ int GetMissionCycleFilePath(LMM_GAMEMODE gamemode, char[] path) {
 			return -1;
 		}
 	}
-	
-	return -1;
 }
 
 bool HasMissionCycleFile(LMM_GAMEMODE gamemode) {
@@ -321,6 +321,7 @@ void PopulateDefaultMissionCycle(LMM_GAMEMODE gamemode, File missionCycleFile) {
 			missionCycleFile.WriteLine("L4D2C11");
 			missionCycleFile.WriteLine("L4D2C12");
 			missionCycleFile.WriteLine("L4D2C13");
+			missionCycleFile.WriteLine("L4D2C14");
 		}
 		case LMM_GAMEMODE_SCAVENGE: {
 			missionCycleFile.WriteLine("L4D2C1");
@@ -334,6 +335,7 @@ void PopulateDefaultMissionCycle(LMM_GAMEMODE gamemode, File missionCycleFile) {
 			missionCycleFile.WriteLine("L4D2C10");
 			missionCycleFile.WriteLine("L4D2C11");
 			missionCycleFile.WriteLine("L4D2C12");
+			missionCycleFile.WriteLine("L4D2C14");
 		}
 		case LMM_GAMEMODE_SURVIVAL: {
 			missionCycleFile.WriteLine("L4D2C1");
@@ -344,6 +346,7 @@ void PopulateDefaultMissionCycle(LMM_GAMEMODE gamemode, File missionCycleFile) {
 			missionCycleFile.WriteLine("L4D2C6");
 			missionCycleFile.WriteLine("L4D2C7");
 			missionCycleFile.WriteLine("L4D2C8");
+			missionCycleFile.WriteLine("L4D2C14");
 		}
 	}
 }
@@ -528,7 +531,6 @@ bool ShowMissionChooser(int iClient, bool isMap, bool isVote, int prevLevelMenuP
 	}
 
 	// Determine the map list shown in the menu
-	bool nextMapVoting = isVote;
 	char curMapName[LEN_MAP_FILENAME];
 	GetCurrentMap(curMapName,sizeof(curMapName));			//Get the current map from the game
 	int curCycleIndex = ACS_GetCycleIndexFromMapName(g_iGameMode, curMapName);  // -1 if not found
@@ -538,7 +540,7 @@ bool ShowMissionChooser(int iClient, bool isMap, bool isVote, int prevLevelMenuP
 	int cycleIndices_len = 0;
 	// Go through each mission, add valid options to int[] cycleIndices
 	for(int cycleIndex = 0; cycleIndex < cycleIndices_maxlen; cycleIndex++) {
-		if (nextMapVoting) {
+		if (isVote) {
 			// Exclude the current map (g_hCVar_NextMapMenuExcludes)
 			if (g_hCVar_NextMapMenuExcludes.IntValue == 1 && curCycleIndex == cycleIndex) continue;
 			// Exclude addon maps (g_hCVar_NextMapMenuOptions)
@@ -551,7 +553,7 @@ bool ShowMissionChooser(int iClient, bool isMap, bool isVote, int prevLevelMenuP
 	}
 
 	// Randomize (g_hCVar_NextMapMenuOrder)
-	if (g_hCVar_NextMapMenuOrder.IntValue == 1) {
+	if (isVote && g_hCVar_NextMapMenuOrder.IntValue == 1) {
 		for (int i = 0; i<cycleIndices_len; i++) {
 			int iSwap = i + GetRandomInt(0, cycleIndices_len-i-1);
 			int temp = cycleIndices[i];

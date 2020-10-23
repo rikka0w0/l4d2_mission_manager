@@ -52,6 +52,10 @@
 	{
 		"en" "Cold Stream"
 	}
+	"L4D2C14"
+	{
+		"en" "The Last Stand"
+	}
 	"QuestionableEthics"
 	{
 		"en" "Questionable Ethics 1"
