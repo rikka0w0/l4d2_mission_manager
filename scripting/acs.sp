@@ -2067,33 +2067,33 @@ bool OnFinaleOrScavengeMap() {
 	
 	if(g_iGameMode == GAMEMODE_SURVIVAL)
 		return false;
-	
+
 	// Coop or Versus
-	int sdkcall_ret = LMM_IsOnFinalMap();
-	if (sdkcall_ret > -1) {
-		// SDKCall succeed
-		return sdkcall_ret == 1;
-	}
-
-  // SDKCall failed due to possible signature change, fallback to our classic method
 	char strCurrentMap[LEN_MAP_FILENAME];
-	GetCurrentMap(strCurrentMap, sizeof(strCurrentMap));			//Get the current map from the game
-	
-	char lastMap[LEN_MAP_FILENAME];
-	//Run through all the maps, if the current map is a finale map, return true
-	for(int cycleIndex = 0; cycleIndex < ACS_GetMissionCount(g_iGameMode); cycleIndex++) {
-		ACS_GetLastMapName(g_iGameMode, cycleIndex, lastMap, sizeof(lastMap));
-		if(StrEqual(strCurrentMap, lastMap, false))
-			return true;
-	}
-
+	GetCurrentMap(strCurrentMap, sizeof(strCurrentMap));	//Get the current map from the game
 	// Check if the current map is in the custom finale list
+	char lastMap[LEN_MAP_FILENAME];
 	if (g_iGameMode == LMM_GAMEMODE_COOP) {
 		for (int i=0; i<GetArraySize(g_hStr_MyCoopFinales); i++) {
 			g_hStr_MyCoopFinales.GetString(i, lastMap, sizeof(lastMap));
 			if(StrEqual(strCurrentMap, lastMap, false))
 				return true;
 		}
+	}
+
+	// Attempt to use SDKCall first
+	int sdkcall_ret = LMM_IsOnFinalMap();
+	if (sdkcall_ret > -1) {
+		// SDKCall succeed
+		return sdkcall_ret == 1;
+	}
+
+	// SDKCall failed due to possible signature change, fallback to our classic method
+	//Run through all the maps, if the current map is a finale map, return true
+	for(int cycleIndex = 0; cycleIndex < ACS_GetMissionCount(g_iGameMode); cycleIndex++) {
+		ACS_GetLastMapName(g_iGameMode, cycleIndex, lastMap, sizeof(lastMap));
+		if(StrEqual(strCurrentMap, lastMap, false))
+			return true;
 	}
 
 	return false;
