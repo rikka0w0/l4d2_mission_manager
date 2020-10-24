@@ -1223,8 +1223,8 @@ public void CVarChange_MaxFinaleFailures(Handle hCVar, const char[] strOldValue,
 	
 	//If the value was changed, then set it and display a message to the server and players
 	if (iMaxFailures > 0) {
-		PrintToServer("[ACS] ConVar changed: Max Coop finale failures changed to %f", iMaxFailures);
-		PrintToChatAll("[ACS] ConVar changed: Max Coop finale failures changed to %f", iMaxFailures);
+		PrintToServer("[ACS] ConVar changed: Max Coop finale failures changed to %i", iMaxFailures);
+		PrintToChatAll("[ACS] ConVar changed: Max Coop finale failures changed to %i", iMaxFailures);
 	} else {
 		PrintToServer("[ACS] ConVar changed: Max Coop finale failures changed to 0");
 		PrintToChatAll("[ACS] ConVar changed: Max Coop finale failures changed to 0");
