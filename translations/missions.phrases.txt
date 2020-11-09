@@ -168,4 +168,16 @@
 	{
 		"en" "Undead Zone"
 	}
+	"nightterror"
+	{
+		"en" "Night Terror"
+	}
+	"DayBreak"
+	{
+		"en" "Day Break"
+	}
+	"suicideblitz2"
+	{
+		"en" "Suicide Blitz 2"
+	}
 }
