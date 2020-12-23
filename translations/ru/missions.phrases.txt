@@ -1,0 +1,171 @@
+"Phrases" 
+{
+	"L4D2C1"
+	{
+		"ru" "Вымерший центр"
+	}
+	"L4D2C2"
+	{
+		"ru" "Мрачный карнавал"
+	}
+	"L4D2C3"
+	{
+		"ru" "Болотная лихорадка"
+	}
+	"L4D2C4"
+	{
+		"ru" "Ужасный ливень"
+	}
+	"L4D2C5"
+	{
+		"ru" "Приход"
+	}
+	"L4D2C6"
+	{
+		"ru" "Переход"
+	}
+	"L4D2C7"
+	{
+		"ru" "Жертва"
+	}
+	"L4D2C8"
+	{
+		"ru" "Нет милосердию"
+	}
+	"L4D2C9"
+	{
+		"ru" "Роковой полёт"
+	}
+	"L4D2C10"
+	{
+		"ru" "Похоронный звон"
+	}
+	"L4D2C11"
+	{
+		"ru" "Смерть в воздухе"
+	}
+	"L4D2C12"
+	{
+		"ru" "Кровавая жатва"
+	}
+	"L4D2C13"
+	{
+		"ru" "Холодный ручей"
+	}
+	"L4D2C14"
+	{
+		"ru" "Последний рубеж"
+	}
+	"QuestionableEthics"
+	{
+		"ru" "Questionable Ethics 1"
+	}
+	"QuestionableEthicsAlphaTest"
+	{
+		"ru" "Questionable Ethics 2"
+	}
+	"CrashBandicootTheReturn"
+	{
+		"ru" "CrashBandicoot 1"
+	}
+	"l4d2CrashBandicoot2"
+	{
+		"ru" "CrashBandicoot 2"
+	}
+	"TanksPlayground"
+	{
+		"ru" "Tanks Playground"
+	}
+	"WhiteForest"
+	{
+		"ru" "White Forest"
+	}
+	"YamaMSE"
+	{
+		"ru" "Yama"
+	}
+	"ddntr1"
+	{
+		"ru" "Deadenator"
+	}
+	"Diescraper36"
+	{
+		"ru" "Diescraper"
+	}
+	"SaltHellPark"
+	{
+		"ru" "Salt Hell Park"
+	}
+	"TheBloodyMoors"
+	{
+		"ru" "The Bloody Moors"
+	}
+	"FarewellChenming"
+	{
+		"ru" "Farewell Chenming"
+	}
+	"darkwood"
+	{
+		"ru" "Dark Wood"
+	}
+	"DevilMountain"
+	{
+		"ru" "Devil Mountain"
+	}
+	"fallen"
+	{
+		"ru" "Fallen"
+	}
+	"Cure2"
+	{
+		"ru" "Cure 2"
+	}
+	"deadvacation2"
+	{
+		"ru" "Dead Vacation 2"
+	}
+	"Derailed"
+	{
+		"ru" "Derailed"
+	}
+	"hauntedforest"
+	{
+		"ru" "Haunted Forest"
+	}
+	"TheCure"
+	{
+		"ru" "The Cure"
+	}
+	"2evileyes"
+	{
+		"ru" "Evil Eyes"
+	}
+	"BloodTracks"
+	{
+		"ru" "Blood Tracks"
+	}
+	"drdegov21"
+	{
+		"ru" "Drop Dead Gorges"
+	}
+	"DeadSeries"
+	{
+		"ru" "Dead Series"
+	}
+	"HighwayToHell"
+	{
+		"ru" "Highway To Hell"
+	}
+	"ihatemountains2"
+	{
+		"ru" "I Hate Moutains 2"
+	}
+	"JourneyToSplashMountain"
+	{
+		"ru" "Journey To Splash Mountain"
+	}
+	"undeadzone"
+	{
+		"ru" "Undead Zone"
+	}
+}
