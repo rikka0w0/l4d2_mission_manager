@@ -225,6 +225,8 @@ public int Native_GetCurrentGameMode(Handle plugin, int numParams) {
 		gamemode = LMM_GAMEMODE_SURVIVAL;
 	else if(StrEqual(strGameMode, "community5", false))	//Death's Door
 		gamemode = LMM_GAMEMODE_COOP;
+	else if(StrEqual(strGameMode, "nightmaredifficulty", false))	//Nightmare Difficulty
+		gamemode = LMM_GAMEMODE_COOP;
 	else
 		gamemode = LMM_GAMEMODE_UNKNOWN;
 		
