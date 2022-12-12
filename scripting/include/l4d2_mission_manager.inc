@@ -97,3 +97,41 @@ stock void ShutDownScriptedMode()
 	FakeClientCommand(iClient, "scripted_mode_shutdown");
 	SetCommandFlags("scripted_mode_shutdown", iCmdFlags);
 }
+
+public SharedPlugin __pl_l4d2_mission_manager =
+{
+	name = "l4d2_mission_manager",
+	file = "l4d2_mission_manager.smx",
+#if defined REQUIRE_PLUGIN
+	required = 1,
+#else
+	required = 0,
+#endif
+};
+
+#if !defined REQUIRE_PLUGIN
+public void __pl_l4d2_mission_manager_SetNTVOptional()
+{
+	MarkNativeAsOptional("LMM_GetCurrentGameMode");
+	MarkNativeAsOptional("LMM_StringToGamemode");
+	MarkNativeAsOptional("LMM_GamemodeToString");
+	
+	MarkNativeAsOptional("LMM_GetNumberOfMissions");
+	MarkNativeAsOptional("LMM_FindMissionIndexByName");
+	MarkNativeAsOptional("LMM_GetMissionName");
+	MarkNativeAsOptional("LMM_GetMissionLocalizedName");
+	
+	MarkNativeAsOptional("LMM_GetNumberOfMaps");
+	MarkNativeAsOptional("LMM_FindMapIndexByName");
+	MarkNativeAsOptional("LMM_GetMapName");
+	MarkNativeAsOptional("LMM_GetMapLocalizedName");
+	MarkNativeAsOptional("LMM_GetMapUniqueID");
+	MarkNativeAsOptional("LMM_DecodeMapUniqueID");
+	MarkNativeAsOptional("LMM_GetMapUniqueIDCount");
+	
+	MarkNativeAsOptional("LMM_GetNumberOfInvalidMissions");
+	MarkNativeAsOptional("LMM_GetInvalidMissionName");
+	
+	MarkNativeAsOptional("LMM_IsOnFinalMap");
+}
+#endif
