@@ -227,6 +227,8 @@ public int Native_GetCurrentGameMode(Handle plugin, int numParams) {
 		gamemode = LMM_GAMEMODE_COOP;
 	else if(StrEqual(strGameMode, "nightmaredifficulty", false))	//Nightmare Difficulty
 		gamemode = LMM_GAMEMODE_COOP;
+	else if(StrEqual(strGameMode, "tankrun", false))	//Tank Run
+		gamemode = LMM_GAMEMODE_COOP;
 	else
 		gamemode = LMM_GAMEMODE_UNKNOWN;
 		
