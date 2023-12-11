@@ -83,7 +83,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v2.3.0"
+#define PLUGIN_VERSION	"v2.3.1"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -308,45 +308,45 @@ File OpenMissionCycleFile(LMM_GAMEMODE gamemode, const char[] mode) {
 void PopulateDefaultMissionCycle(LMM_GAMEMODE gamemode, File missionCycleFile) {
 	switch (gamemode) {
 		case LMM_GAMEMODE_COOP, LMM_GAMEMODE_VERSUS: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C9");
-			missionCycleFile.WriteLine("L4D2C10");
-			missionCycleFile.WriteLine("L4D2C11");
-			missionCycleFile.WriteLine("L4D2C12");
-			missionCycleFile.WriteLine("L4D2C13");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C9");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C10");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C11");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C12");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C13");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 		case LMM_GAMEMODE_SCAVENGE: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C10");
-			missionCycleFile.WriteLine("L4D2C11");
-			missionCycleFile.WriteLine("L4D2C12");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C10");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C11");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C12");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 		case LMM_GAMEMODE_SURVIVAL: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 	}
 }
@@ -1016,11 +1016,18 @@ public void OnPluginStart() {
 	HookEvent("player_disconnect", Event_PlayerDisconnect);
 	
 	//Register custom console commands
-	RegConsoleCmd("mapvote", MapVote);
-	RegConsoleCmd("mapvotes", DisplayCurrentVotes);
+	RegConsoleCmd("sm_maps", Command_ChangeMapVote);
+	RegConsoleCmd("sm_vm", Command_ChangeMapVote);
+	RegConsoleCmd("sm_vmap", Command_ChangeMapVote);
+	RegConsoleCmd("sm_votemap", Command_ChangeMapVote);
 	RegConsoleCmd("sm_chmap", Command_ChangeMapVote);
 	RegConsoleCmd("sm_chmap2", Command_ChangeMapVote2);
 	//RegConsoleCmd("sm_acs_maps", Command_MapList);
+
+	RegConsoleCmd("nextmap", MapVote);
+	RegConsoleCmd("mapnext", MapVote);
+	RegConsoleCmd("mapvote", MapVote);
+	RegConsoleCmd("mapvotes", DisplayCurrentVotes);
 }
 
 public Action Command_ChangeMapVote(int iClient, int args) {
@@ -1798,12 +1805,12 @@ void DisplayNextMapToAll() {
 public Action MapVote(int iClient, int args) {
 	if(!g_hCVar_VotingEnabled.BoolValue) {
 		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
-		return;
+		return Plugin_Handled;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
 		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
-		return;
+		return Plugin_Handled;
 	}
 	
 	//Open the vote menu for the client if they arent using the server console
@@ -1819,12 +1826,12 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 
 	if(!g_hCVar_VotingEnabled.BoolValue) {
 		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
-		return;
+		return Plugin_Handled;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
 		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
-		return;
+		return Plugin_Handled;
 	}
 			
 	//Display to the client the current winning map

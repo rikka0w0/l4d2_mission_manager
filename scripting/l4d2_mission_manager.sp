@@ -9,7 +9,7 @@ public Plugin myinfo = {
 	name = "L4D2 Mission Manager",
 	author = "Rikka0w0",
 	description = "Mission manager for L4D2, provide information about map orders for other plugins",
-	version = "v1.0.0",
+	version = "v1.0.1",
 	url = "http://forums.alliedmods.net/showthread.php?t=308725"
 }
 
@@ -711,7 +711,7 @@ public SMCResult MissionParser_NewSection(SMCParser smc, const char[] name, bool
 public SMCResult MissionParser_KeyValue(SMCParser smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes) {
 	switch (g_MissionParser_State) {
 		case MPS_MISSION: {
-			if (strcmp("Name", key, false)==0) {
+			if (strcmp("DisplayTitle", key, false)==0) {
 				strcopy(g_MissionParser_MissionName, LEN_MISSION_NAME, value);
 			}
 		}
