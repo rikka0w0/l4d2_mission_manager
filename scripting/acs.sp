@@ -382,7 +382,7 @@ void LoadMissionList(LMM_GAMEMODE gamemode) {
 
 			// Ignore comments
 		} else {
-			int numOfStrings = ExplodeString(buffer, ",", buffer_split, LEN_CFG_LINE, LEN_CFG_SEGMENT);
+			int numOfStrings = ExplodeString(buffer, ";", buffer_split, LEN_CFG_LINE, LEN_CFG_SEGMENT);
 			TrimString(buffer_split[0]);	// Mission name
 			if (numOfStrings > 1) {
 				// For future use
@@ -392,7 +392,7 @@ void LoadMissionList(LMM_GAMEMODE gamemode) {
 			if (iMission >= 0) {	// The mission is valid
 				missionIndexList.Push(iMission);
 			} else {
-				LogError("Mission \"%s\" (Gamemode: %s) is not in the mission cache or no longer exists!\n", buffer_split[0], gamemodeName);
+				LogMessage("Mission \"%s\" (Gamemode: %s) is not in the mission cache or no longer exists!\n", buffer_split[0], gamemodeName);
 			}
 		}
 	}
@@ -727,14 +727,14 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		if (item == MenuCancel_ExitBack) {
 			// Open main menu
 			menu.GetItem(0, menuInfo, sizeof(menuInfo));
-			ExplodeString(menuInfo, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+			ExplodeString(menuInfo, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 			bool isVote = StringToInt(buffer_split[0]) == 1;
 			int prevLevelMenuPage = StringToInt(buffer_split[1]);
 			ShowMissionChooser(client, true, isVote, prevLevelMenuPage);
 		}
 	} else if (action == MenuAction_DisplayItem) {
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
-		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		ExplodeString(menuName, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 		int missionIndex = StringToInt(buffer_split[0]);
 		int mapIndex = StringToInt(buffer_split[1]);
 		LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
@@ -750,7 +750,7 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		}
 		
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
-		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		ExplodeString(menuName, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 		int missionIndex = StringToInt(buffer_split[0]);
 		int mapIndex = StringToInt(buffer_split[1]);	
 
@@ -765,9 +765,8 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 	return 0;
 }
 
-bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
-	Menu menuVote = CreateMenu(ChampVoteHandler, 
-						MenuAction_Display|MenuAction_DisplayItem|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
+void ShowChmapVoteToAll(int missionIndex, int mapIndex) {
+	Menu menuVote = CreateMenu(ChampVoteHandler, MenuAction_Display|MenuAction_DisplayItem|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
 	
 	menuVote.SetTitle("To be translated");
 	char menuInfo[MMC_ITEM_LEN_INFO];
@@ -1075,6 +1074,7 @@ void MakeChMapBroadcastTimer() {
 
 public Action Timer_WelcomeMessage(Handle timer, any param) {
 	PrintToChatAll("\x03[ACS]\x01 %t", "Change map advertise", "\x04!chmap\x01");
+	return Plugin_Continue;
 }
 
 /*======================================================================================
@@ -1394,6 +1394,8 @@ public Action Timer_CheckEmptyServer(Handle timer, any param) {
 		// Some one joined
 		KillEmptyCheckTimer();
 	}
+
+	return Plugin_Continue;
 }
 
 //Check to see if the current map is a finale, and if so, switch to the next campaign
@@ -1818,6 +1820,8 @@ public Action MapVote(int iClient, int args) {
 		PrintToServer("You cannot vote for a map from the server console, use the in-game chat");
 	else
 		VoteMenuDraw(iClient);
+
+	return Plugin_Handled;
 }
 
 //Command that a player can use to see the total votes for all maps/campaigns
@@ -1880,6 +1884,8 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 				
 		}
 	}
+
+	return Plugin_Handled;
 }
 
 /*======================================================================================

@@ -756,7 +756,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 					if (g_hStr_InvalidMissionNames.FindString(g_MissionParser_MissionName) < 0) {
 						g_hStr_InvalidMissionNames.PushString(g_MissionParser_MissionName);
 					}
-					LogError("Mission %s contains invalid \"%s\" section", g_MissionParser_MissionName, gamemodeName);
+					LogMessage("Mission %s contains invalid \"%s\" section", g_MissionParser_MissionName, gamemodeName);
 					return SMCParse_HaltFail;
 				}
 				
@@ -767,7 +767,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 					if (g_hStr_InvalidMissionNames.FindString(g_MissionParser_MissionName) < 0) {
 						g_hStr_InvalidMissionNames.PushString(g_MissionParser_MissionName);
 					}
-					LogError("Mission %s contains invalid map: \"%s\", gamemode: \"%s\"", g_MissionParser_MissionName, mapFile, gamemodeName);
+					LogMessage("Mission %s contains invalid map: \"%s\", gamemode: \"%s\"", g_MissionParser_MissionName, mapFile, gamemodeName);
 					return SMCParse_HaltFail;
 				}
 				numOfValidMaps++;
@@ -776,7 +776,7 @@ public SMCResult MissionParser_EndSection(SMCParser smc) {
 			if (numOfValidMaps < 1) {
 				char gamemodeName[LEN_GAMEMODE_NAME];
 				LMM_GamemodeToString(g_MissionParser_CurGameMode, gamemodeName, sizeof(gamemodeName));
-				LogError("Mission %s does not contain any valid map in gamemode: \"%s\"", g_MissionParser_MissionName, gamemodeName);
+				LogMessage("Mission %s does not contain any valid map in gamemode: \"%s\"", g_MissionParser_MissionName, gamemodeName);
 				return SMCParse_Continue;
 			}
 			
@@ -900,7 +900,7 @@ void ParseMissions() {
 				SMCError err = parser.ParseFile(missionCache);
 				if (err != SMCError_Okay) {
 					g_hStr_InvalidMissionNames.PushString(missionCache);
-					LogError("An error occured while parsing %s, code:%d", missionCache, err);
+					LogMessage("An error occured while parsing %s, code:%d", missionCache, err);
 				}
 			}
 		}
