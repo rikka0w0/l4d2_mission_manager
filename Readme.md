@@ -18,92 +18,92 @@ Function description and usage of "Automatic Campaign Switcher" should refer to 
 "L4D2 Mission Manager" itself does not affect the game play. There is only one command available: "sm_lmm_list", which lists installed maps on the server. "sm_lmm_list" can have one of the following as paramter:
 `coop, versus, scavenge, survival or invalid`. The last one prints all maps/missions with error, helps server admins to locate them.Sample usage and output:
 ```sm_lmm_list coop
-Gamemode = coop (17 missions)
+Gamemode = coop (14 missions)
 
 1. #L4D360UI_CampaignName_C1 (4 maps)
-- c1m1_hotel
-- c1m2_streets
-- c1m3_mall
-- c1m4_atrium
+;c1m1_hotel
+;c1m2_streets
+;c1m3_mall
+;c1m4_atrium
 
 2. #L4D360UI_CampaignName_C2 (5 maps)
-- c2m1_highway
-- c2m2_fairgrounds
-- c2m3_coaster
-- c2m4_barns
-- c2m5_concert
+;c2m1_highway
+;c2m2_fairgrounds
+;c2m3_coaster
+;c2m4_barns
+;c2m5_concert
 
 3. #L4D360UI_CampaignName_C3 (4 maps)
-- c3m1_plankcountry
-- c3m2_swamp
-- c3m3_shantytown
-- c3m4_plantation
+;c3m1_plankcountry
+;c3m2_swamp
+;c3m3_shantytown
+;c3m4_plantation
 
 4. #L4D360UI_CampaignName_C4 (5 maps)
-- c4m1_milltown_a
-- c4m2_sugarmill_a
-- c4m3_sugarmill_b
-- c4m4_milltown_b
-- c4m5_milltown_escape
+;c4m1_milltown_a
+;c4m2_sugarmill_a
+;c4m3_sugarmill_b
+;c4m4_milltown_b
+;c4m5_milltown_escape
 
 5. #L4D360UI_CampaignName_C5 (5 maps)
-- c5m1_waterfront
-- c5m2_park
-- c5m3_cemetery
-- c5m4_quarter
-- c5m5_bridge
+;c5m1_waterfront
+;c5m2_park
+;c5m3_cemetery
+;c5m4_quarter
+;c5m5_bridge
 
 6. #L4D360UI_CampaignName_C6 (3 maps)
-- c6m1_riverbank
-- c6m2_bedlam
-- c6m3_port
+;c6m1_riverbank
+;c6m2_bedlam
+;c6m3_port
 
 7. #L4D360UI_CampaignName_C7 (3 maps)
-- c7m1_docks
-- c7m2_barge
-- c7m3_port
+;c7m1_docks
+;c7m2_barge
+;c7m3_port
 
 8. #L4D360UI_CampaignName_C8 (5 maps)
-- c8m1_apartment
-- c8m2_subway
-- c8m3_sewers
-- c8m4_interior
-- c8m5_rooftop
+;c8m1_apartment
+;c8m2_subway
+;c8m3_sewers
+;c8m4_interior
+;c8m5_rooftop
 
 9. #L4D360UI_CampaignName_C9 (2 maps)
-- c9m1_alleys
-- c9m2_lots
+;c9m1_alleys
+;c9m2_lots
 
 10. #L4D360UI_CampaignName_C10 (5 maps)
-- c10m1_caves
-- c10m2_drainage
-- c10m3_ranchhouse
-- c10m4_mainstreet
-- c10m5_houseboat
+;c10m1_caves
+;c10m2_drainage
+;c10m3_ranchhouse
+;c10m4_mainstreet
+;c10m5_houseboat
 
 11. #L4D360UI_CampaignName_C11 (5 maps)
-- c11m1_greenhouse
-- c11m2_offices
-- c11m3_garage
-- c11m4_terminal
-- c11m5_runway
+;c11m1_greenhouse
+;c11m2_offices
+;c11m3_garage
+;c11m4_terminal
+;c11m5_runway
 
 12. #L4D360UI_CampaignName_C12 (5 maps)
-- c12m1_hilltop
-- c12m2_traintunnel
-- c12m3_bridge
-- c12m4_barn
-- c12m5_cornfield
+;c12m1_hilltop
+;c12m2_traintunnel
+;c12m3_bridge
+;c12m4_barn
+;c12m5_cornfield
 
 13. #L4D360UI_CampaignName_C13 (4 maps)
-- c13m1_alpinecreek
-- c13m2_southpinestream
-- c13m3_memorialbridge
-- c13m4_cutthroatcreek
+;c13m1_alpinecreek
+;c13m2_southpinestream
+;c13m3_memorialbridge
+;c13m4_cutthroatcreek
 
 14. #L4D360UI_CampaignName_C14 (2 maps)
-- c14m1_junkyard
-- c14m2_lighthouse
+;c14m1_junkyard
+;c14m2_lighthouse
 ```
 
 ---
