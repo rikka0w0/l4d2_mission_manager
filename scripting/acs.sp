@@ -83,7 +83,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION	"v2.3.0"
+#define PLUGIN_VERSION	"v2.3.1"
 
 //Define the wait time after round before changing to the next map in each game mode
 #define WAIT_TIME_BEFORE_SWITCH_COOP			5.0
@@ -308,45 +308,45 @@ File OpenMissionCycleFile(LMM_GAMEMODE gamemode, const char[] mode) {
 void PopulateDefaultMissionCycle(LMM_GAMEMODE gamemode, File missionCycleFile) {
 	switch (gamemode) {
 		case LMM_GAMEMODE_COOP, LMM_GAMEMODE_VERSUS: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C9");
-			missionCycleFile.WriteLine("L4D2C10");
-			missionCycleFile.WriteLine("L4D2C11");
-			missionCycleFile.WriteLine("L4D2C12");
-			missionCycleFile.WriteLine("L4D2C13");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C9");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C10");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C11");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C12");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C13");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 		case LMM_GAMEMODE_SCAVENGE: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C10");
-			missionCycleFile.WriteLine("L4D2C11");
-			missionCycleFile.WriteLine("L4D2C12");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C10");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C11");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C12");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 		case LMM_GAMEMODE_SURVIVAL: {
-			missionCycleFile.WriteLine("L4D2C1");
-			missionCycleFile.WriteLine("L4D2C2");
-			missionCycleFile.WriteLine("L4D2C3");
-			missionCycleFile.WriteLine("L4D2C4");
-			missionCycleFile.WriteLine("L4D2C5");
-			missionCycleFile.WriteLine("L4D2C6");
-			missionCycleFile.WriteLine("L4D2C7");
-			missionCycleFile.WriteLine("L4D2C8");
-			missionCycleFile.WriteLine("L4D2C14");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C1");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C2");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C3");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C4");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C5");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C6");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C7");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C8");
+			missionCycleFile.WriteLine("#L4D360UI_CampaignName_C14");
 		}
 	}
 }
@@ -382,7 +382,7 @@ void LoadMissionList(LMM_GAMEMODE gamemode) {
 
 			// Ignore comments
 		} else {
-			int numOfStrings = ExplodeString(buffer, ",", buffer_split, LEN_CFG_LINE, LEN_CFG_SEGMENT);
+			int numOfStrings = ExplodeString(buffer, ";", buffer_split, LEN_CFG_LINE, LEN_CFG_SEGMENT);
 			TrimString(buffer_split[0]);	// Mission name
 			if (numOfStrings > 1) {
 				// For future use
@@ -392,7 +392,7 @@ void LoadMissionList(LMM_GAMEMODE gamemode) {
 			if (iMission >= 0) {	// The mission is valid
 				missionIndexList.Push(iMission);
 			} else {
-				LogError("Mission \"%s\" (Gamemode: %s) is not in the mission cache or no longer exists!\n", buffer_split[0], gamemodeName);
+				LogMessage("Mission \"%s\" (Gamemode: %s) is not in the mission cache or no longer exists!\n", buffer_split[0], gamemodeName);
 			}
 		}
 	}
@@ -727,14 +727,14 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		if (item == MenuCancel_ExitBack) {
 			// Open main menu
 			menu.GetItem(0, menuInfo, sizeof(menuInfo));
-			ExplodeString(menuInfo, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+			ExplodeString(menuInfo, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 			bool isVote = StringToInt(buffer_split[0]) == 1;
 			int prevLevelMenuPage = StringToInt(buffer_split[1]);
 			ShowMissionChooser(client, true, isVote, prevLevelMenuPage);
 		}
 	} else if (action == MenuAction_DisplayItem) {
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
-		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		ExplodeString(menuName, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 		int missionIndex = StringToInt(buffer_split[0]);
 		int mapIndex = StringToInt(buffer_split[1]);
 		LMM_GetMapLocalizedName(g_iGameMode, missionIndex, mapIndex, localizedName, sizeof(localizedName), client);
@@ -750,7 +750,7 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 		}
 		
 		menu.GetItem(item, menuInfo, sizeof(menuInfo), _, menuName, sizeof(menuName));
-		ExplodeString(menuName, ",", buffer_split, 3, MMC_ITEM_LEN_NAME);
+		ExplodeString(menuName, ";", buffer_split, 3, MMC_ITEM_LEN_NAME);
 		int missionIndex = StringToInt(buffer_split[0]);
 		int mapIndex = StringToInt(buffer_split[1]);	
 
@@ -765,9 +765,8 @@ public int MapChooserMenuHandler(Menu menu, MenuAction action, int client, int i
 	return 0;
 }
 
-bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
-	Menu menuVote = CreateMenu(ChampVoteHandler, 
-						MenuAction_Display|MenuAction_DisplayItem|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
+void ShowChmapVoteToAll(int missionIndex, int mapIndex) {
+	Menu menuVote = CreateMenu(ChmapVoteHandler, MenuAction_Display|MenuAction_DisplayItem|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
 	
 	menuVote.SetTitle("To be translated");
 	char menuInfo[MMC_ITEM_LEN_INFO];
@@ -779,7 +778,7 @@ bool ShowChmapVoteToAll(int missionIndex, int mapIndex) {
 	menuVote.DisplayVoteToAll(20);
 }
 
-public int ChampVoteHandler(Menu menu, MenuAction action, int param1, int param2) {
+public int ChmapVoteHandler(Menu menu, MenuAction action, int param1, int param2) {
 	if (action == MenuAction_Display) {
 		// Localize title
 		char localizedName[LEN_LOCALIZED_NAME];
@@ -1016,11 +1015,18 @@ public void OnPluginStart() {
 	HookEvent("player_disconnect", Event_PlayerDisconnect);
 	
 	//Register custom console commands
-	RegConsoleCmd("mapvote", MapVote);
-	RegConsoleCmd("mapvotes", DisplayCurrentVotes);
+	RegConsoleCmd("sm_maps", Command_ChangeMapVote);
+	RegConsoleCmd("sm_vm", Command_ChangeMapVote);
+	RegConsoleCmd("sm_vmap", Command_ChangeMapVote);
+	RegConsoleCmd("sm_votemap", Command_ChangeMapVote);
 	RegConsoleCmd("sm_chmap", Command_ChangeMapVote);
 	RegConsoleCmd("sm_chmap2", Command_ChangeMapVote2);
 	//RegConsoleCmd("sm_acs_maps", Command_MapList);
+
+	RegConsoleCmd("nextmap", MapVote);
+	RegConsoleCmd("mapnext", MapVote);
+	RegConsoleCmd("mapvote", MapVote);
+	RegConsoleCmd("mapvotes", DisplayCurrentVotes);
 }
 
 public Action Command_ChangeMapVote(int iClient, int args) {
@@ -1068,6 +1074,7 @@ void MakeChMapBroadcastTimer() {
 
 public Action Timer_WelcomeMessage(Handle timer, any param) {
 	PrintToChatAll("\x03[ACS]\x01 %t", "Change map advertise", "\x04!chmap\x01");
+	return Plugin_Continue;
 }
 
 /*======================================================================================
@@ -1387,6 +1394,8 @@ public Action Timer_CheckEmptyServer(Handle timer, any param) {
 		// Some one joined
 		KillEmptyCheckTimer();
 	}
+
+	return Plugin_Continue;
 }
 
 //Check to see if the current map is a finale, and if so, switch to the next campaign
@@ -1625,7 +1634,7 @@ bool NextMapFromRotation_Scavenge(int& missionIndex_ret, int& mapIndex_ret) {
 		}
 	}
 
-	LogError("ACS was unable to locate the current map (%s) in the map cycle!", strCurrentMap);
+	LogMessage("ACS was unable to locate the current map (%s) in the map cycle!", strCurrentMap);
 	return false;
 }
 
@@ -1671,7 +1680,7 @@ bool NextMapFromRotation(int& cycleIndex_ret) {
 		}
 	}
 
-	LogError("ACS was unable to locate the current map (%s) in the map cycle!", strCurrentMap);
+	LogMessage("ACS was unable to locate the current map (%s) in the map cycle!", strCurrentMap);
 	return false;
 }
 
@@ -1798,12 +1807,12 @@ void DisplayNextMapToAll() {
 public Action MapVote(int iClient, int args) {
 	if(!g_hCVar_VotingEnabled.BoolValue) {
 		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
-		return;
+		return Plugin_Handled;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
 		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
-		return;
+		return Plugin_Handled;
 	}
 	
 	//Open the vote menu for the client if they arent using the server console
@@ -1811,6 +1820,8 @@ public Action MapVote(int iClient, int args) {
 		PrintToServer("You cannot vote for a map from the server console, use the in-game chat");
 	else
 		VoteMenuDraw(iClient);
+
+	return Plugin_Handled;
 }
 
 //Command that a player can use to see the total votes for all maps/campaigns
@@ -1819,12 +1830,12 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 
 	if(!g_hCVar_VotingEnabled.BoolValue) {
 		ReplyToCommand(iClient, "\x03[ACS]\x01 %t", "Voting is disable");
-		return;
+		return Plugin_Handled;
 	}
 	
 	if(!OnFinaleOrScavengeMap()) {
 		PrintToChat(iClient, "\x03[ACS]\x01 %t", "Voting is not available");
-		return;
+		return Plugin_Handled;
 	}
 			
 	//Display to the client the current winning map
@@ -1873,6 +1884,8 @@ public Action DisplayCurrentVotes(int iClient, int args) {
 				
 		}
 	}
+
+	return Plugin_Handled;
 }
 
 /*======================================================================================
